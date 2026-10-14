@@ -46,7 +46,7 @@ export async function createApp(dataRoot) {
   app.get('/api/import/:id', (req, res) => { const r = imports.get(req.params.id); if (!r) return res.status(404).json({ error: 'Importação não encontrada.' }); res.json(r); });
   app.post('/api/layers', upload.array('files', 20), async (req, res) => {
     const added = [], errors = [];
-    try { for (const f of req.files || []) { try { added.push(await store.addAsset(await readFile(f.path), f.originalname, 'layer')); } catch (e) { errors.push(e.message); } } await store.save(); }
+    try { for (const f of req.files || []) { try { added.push(await store.addAsset(await readFile(f.path), f.originalname, 'layer', undefined, { allowOpaque: req.body.allowOpaque === 'true' })); } catch (e) { errors.push(e.message); } } await store.save(); }
     finally { await cleanup(req.files || []); }
     res.json({ added, errors });
   });

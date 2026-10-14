@@ -26,7 +26,7 @@ function effectiveFrame(p) { return { ratio: 'original', width: 0, height: 0, fi
 async function refresh({ keepDraft = false } = {}) {
   state = await api('/api/state');
   if (!currentKey) currentKey = state.products.find(p => p.baseId)?.key;
-  if (!keepDraft) { draft = state.templates.find(t => t.id === draft?.id) ? clone(state.templates.find(t => t.id === draft.id)) : state.templates[0] ? clone(state.templates[0]) : null; modelDirty = false; }
+  if (!keepDraft) { const preferred = state.templates.find(t => t.id === draft?.id) || templateOf(current()) || state.templates.find(t => t.platform === current()?.platform) || state.templates[0]; draft = preferred ? clone(preferred) : null; modelDirty = false; }
   renderReport(); renderList(); renderPicker(); renderInspector(); renderSummary(); setPrefs();
 }
 function showPage(next) { page = next; document.querySelectorAll('.page').forEach(p => p.hidden = p.id !== `page-${next}`); document.querySelectorAll('nav [data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === next)); if (next === 'edit') requestPreview(); renderSummary(); }
@@ -36,7 +36,8 @@ function renderReport() {
   const r = state.importReport;
   $('importReport').innerHTML = r ? `<div class="stats"><div><b>${r.totalProducts}</b><span>produtos reconhecidos</span></div><div><b>${r.previewAssets}</b><span>capas da prévia</span></div><div><b>${r.withPreview}</b><span>produtos com capa da prévia</span></div><div><b>${r.withoutPreview}</b><span>sem capa da prévia</span></div><div><b>${r.withoutImage}</b><span>sem nenhuma imagem</span></div></div>${r.errors?.length || r.warnings?.length ? `<details class="report-issues"><summary>${r.errors.length} falhas e ${r.warnings.length} avisos de importação</summary>${r.errors.map(e => `<p>${escape(e.file)}: ${escape(e.error)}</p>`).join('')}${r.warnings.map(e => `<p>${escape(e)}</p>`).join('')}</details>` : ''}` : '';
   const layers = state.assets.filter(a => a.kind === 'layer');
-  $('layerStatus').textContent = layers.length ? `${layers.length} PNGs transparentes disponíveis. Configure a composição na próxima etapa.` : 'Faltam seus PNGs transparentes originais da faixa e da logo.';
+  const opaqueCount = layers.filter(a => a.opaqueAccepted).length;
+  $('layerStatus').textContent = layers.length ? `${layers.length} PNGs disponíveis${opaqueCount ? ` · ${opaqueCount} opaco(s), com fundo preservado` : ' com transparência'}. Configure a composição na próxima etapa.` : 'Carregue seus PNGs originais da faixa e da logo.';
   const refs = state.assets.filter(a => a.kind === 'reference');
   $('referencesSection').hidden = !refs.length;
   $('references').innerHTML = refs.map(a => `<figure><img src="${assetURL(a.id)}" alt="Referência visual"><figcaption>${escape(a.name.split('/').at(-1))}</figcaption></figure>`).join('');
@@ -87,8 +88,15 @@ $('dropzone').ondragleave = () => $('dropzone').classList.remove('dragging');
 $('dropzone').ondrop = e => { e.preventDefault(); $('dropzone').classList.remove('dragging'); safe(() => importInput(e.dataTransfer.files)); };
 for (const id of ['layerFilesImport', 'layerFiles']) $(id).onchange = e => safe(async () => {
   const form = new FormData(); Array.from(e.target.files).forEach(f => form.append('files', f));
+  form.append('allowOpaque', String($('allowOpaqueLayers').checked));
   const r = await api('/api/layers', 'POST', form); await refresh({ keepDraft: true });
-  toast(r.errors.length ? r.errors.join(' · ') : `${r.added.length} PNG(s) carregado(s).`); e.target.value = '';
+  const opaque = r.added.filter(a => a.opaqueAccepted).length;
+  toast(r.errors.length ? r.errors.join(' · ') : `${r.added.length} PNG(s) carregado(s).${opaque ? ` ${opaque} opaco(s): fundo original preservado.` : ''}`); e.target.value = '';
+});
+for (const id of ['allowOpaqueLayers', 'allowOpaqueLayersModel']) $(id).onchange = e => safe(async () => {
+  for (const target of ['allowOpaqueLayers', 'allowOpaqueLayersModel']) $(target).checked = e.target.checked;
+  const preferences = { allowOpaqueLayers: e.target.checked };
+  await api('/api/preferences', 'PUT', preferences); Object.assign(state.preferences, preferences);
 });
 
 function renderPicker() {
@@ -100,7 +108,7 @@ function frameHTML(f, target) {
   return `<div class="frame-fields" data-frame-target="${target}"><label>Proporção<select data-frame="ratio">${options.map(([v,l]) => `<option value="${v}" ${f.ratio === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label><div class="form-row"><label>Largura (px)<input type="number" data-frame="width" min="0" max="6000" value="${Number(f.width)||0}"><small>0 = largura original</small></label>${f.ratio === 'custom' ? `<label>Altura (px)<input type="number" data-frame="height" min="1" max="6000" value="${Number(f.height)||500}"></label>` : ''}</div>${f.ratio !== 'original' ? `<label>Enquadramento<select data-frame="fit"><option value="contain" ${f.fit==='contain'?'selected':''}>Arte inteira + preenchimento</option><option value="cover" ${f.fit==='cover'?'selected':''}>Recorte explícito</option></select></label><label>Cor de preenchimento<input type="color" data-frame="background" value="${escape(f.background)}"></label>${f.fit === 'cover' ? `<label>Foco horizontal <output>${Math.round(f.focusX*100)}%</output><input type="range" data-frame="focusX" min="0" max="100" value="${f.focusX*100}"></label><label>Foco vertical <output>${Math.round(f.focusY*100)}%</output><input type="range" data-frame="focusY" min="0" max="100" value="${f.focusY*100}"></label><p class="hint">Recorte ativo. Confira os logotipos e confirme este recorte individualmente.</p>${target==='individual' ? `<label><input type="checkbox" data-frame="cropConfirmed" ${f.cropConfirmed?'checked':''}> Conferi e aprovo este recorte</label>` : ''}` : '<p class="hint">A arte permanece inteira, sem esticar. O preenchimento aparece na prévia.</p>'}` : '<p class="hint">Proporção e resolução originais preservadas. Reduções são permitidas; ampliações da arte são bloqueadas.</p>'}</div>`;
 }
 function layersHTML(layers, target) {
-  return layers.map((l, i) => { const a = asset(l.assetId); return `<details class="layer" open><summary><img src="${assetURL(l.assetId)}" alt=""><span>${escape(a?.name || 'PNG ausente')}</span></summary><div class="layer-controls" data-layer-index="${i}" data-layer-target="${target}"><label>Âncora<select data-layer="anchor">${[['bottom-left','Inferior esquerda'],['bottom-right','Inferior direita'],['top-left','Superior esquerda'],['top-right','Superior direita'],['center','Centro']].map(([v,t]) => `<option value="${v}" ${l.anchor===v?'selected':''}>${t}</option>`).join('')}</select></label>${[['width','Largura do quadro',1,100],['marginX','Margem horizontal',0,50],['marginY','Margem vertical',0,50],['opacity','Opacidade',0,100]].map(([k,label,min,max]) => `<label>${label}<output>${(l[k]*100).toFixed(1)}%</output><input type="range" data-layer="${k}" min="${min}" max="${max}" step="0.1" value="${l[k]*100}"></label>`).join('')}<small>${a?.width} × ${a?.height} px · proporção do PNG preservada</small><div class="layer-actions"><button data-layer-move="${i}" data-target="${target}">Subir camada</button><button data-layer-remove="${i}" data-target="${target}" class="danger subtle">Remover</button></div></div></details>`; }).join('');
+  return layers.map((l, i) => { const a = asset(l.assetId); return `<details class="layer" open><summary><img src="${assetURL(l.assetId)}" alt=""><span>${escape(a?.name || 'PNG ausente')}</span></summary><div class="layer-controls" data-layer-index="${i}" data-layer-target="${target}"><label>Âncora<select data-layer="anchor">${[['bottom-left','Inferior esquerda'],['bottom-right','Inferior direita'],['top-left','Superior esquerda'],['top-right','Superior direita'],['center','Centro']].map(([v,t]) => `<option value="${v}" ${l.anchor===v?'selected':''}>${t}</option>`).join('')}</select></label>${[['width','Largura do quadro',1,100],['marginX','Margem horizontal',0,50],['marginY','Margem vertical',0,50],['opacity','Opacidade',0,100]].map(([k,label,min,max]) => `<label>${label}<output>${(l[k]*100).toFixed(1)}%</output><input type="range" data-layer="${k}" min="${min}" max="${max}" step="0.1" value="${l[k]*100}"></label>`).join('')}<small>${a?.width} × ${a?.height} px · proporção preservada${a?.opaqueAccepted ? " · PNG opaco: fundo mantido" : " · transparência preservada"}</small><div class="layer-actions"><button data-layer-move="${i}" data-target="${target}">Subir camada</button><button data-layer-remove="${i}" data-target="${target}" class="danger subtle">Remover</button></div></div></details>`; }).join('');
 }
 function renderInspector() {
   $('tabModel').classList.toggle('active', !individual); $('tabIndividual').classList.toggle('active', individual);
@@ -223,8 +231,8 @@ $('refreshPreview').onclick=()=>requestPreview();
 $('reviewed').onchange=e=>safe(async()=>{if(e.target.checked&&!previewOK)throw new Error('Confira uma prévia válida primeiro.');await patchProducts([currentKey],{reviewed:e.target.checked},false);});
 
 function readPrefs(){return{format:$('format').value,quality:Number($('quality').value),minQuality:Number($('minQuality').value),maxKB:Number($('maxKB').value)};}
-function setPrefs(){for(const k of ['format','quality','minQuality','maxKB'])$(k).value=state.preferences[k];}
-for(const id of ['format','quality','minQuality','maxKB'])$(id).onchange=()=>safe(async()=>{await api('/api/preferences','PUT',readPrefs());state.preferences=readPrefs();requestPreview();});
+function setPrefs(){for(const k of ['format','quality','minQuality','maxKB'])$(k).value=state.preferences[k];for(const k of ['allowOpaqueLayers','allowOpaqueLayersModel'])$(k).checked=!!state.preferences.allowOpaqueLayers;}
+for(const id of ['format','quality','minQuality','maxKB'])$(id).onchange=()=>safe(async()=>{await api('/api/preferences','PUT',readPrefs());state.preferences={...state.preferences,...readPrefs()};requestPreview();});
 function renderSummary(){const items=selected(),ready=items.filter(p=>!state.readiness[p.key]);$('exportSummary').textContent=`${items.length} selecionados · ${ready.length} revisados e prontos · ${items.length-ready.length} pendentes. Dimensões são definidas pelo modelo ou ajuste individual.`;$('exportBatch').disabled=!items.length;}
 async function exportBatch(keys,one=false){
   await flushModel(); const {id}=await api('/api/export','POST',{keys,preferences:readPrefs()});

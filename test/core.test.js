@@ -116,6 +116,24 @@ test('camadas opacas e falsas são rejeitadas', async () => {
   await assert.rejects(store.addAsset(baseBytes, 'opaca.png', 'layer'), /opaco/);
   await assert.rejects(store.addAsset(Buffer.from('oops'), 'falsa.png', 'layer'));
 });
+
+test('PNG opaco exige opção explícita, mantém pixels e acompanha modelos portáteis', async () => {
+  const { store, product, template, root } = await fixture();
+  const opaqueBytes = await sharp({create:{width:20,height:10,channels:3,background:'white'}}).png().toBuffer();
+  await assert.rejects(store.addAsset(opaqueBytes,'fundo-branco.png','layer'),/opaco/);
+  const opaque = await store.addAsset(opaqueBytes,'fundo-branco.png','layer',undefined,{allowOpaque:true});
+  assert.equal(opaque.hasAlpha,false);assert.equal(opaque.hasTransparency,false);assert.equal(opaque.opaqueAccepted,true);
+  assert.equal(hash(await readFile(store.assetPath(opaque.id))),hash(opaqueBytes));
+  template.layers[0].assetId=opaque.id;template.layers[0].opacity=1;
+  const composed=await compose(store,product);
+  assert.match(composed.warnings.join(' '),/PNG opaco/);
+  const {data,info}=await sharp(composed.bytes).raw().toBuffer({resolveWithObject:true});
+  const offset=(130*info.width+25)*info.channels;
+  assert.deepEqual([...data.subarray(offset,offset+4)],[255,255,255,255]);
+  const zip=path.join(root,'opaque-model.zip');await exportTemplates(store,zip);
+  const restored=await new Store(path.join(root,'restored')).init();await importTemplates(restored,zip);
+  assert.equal(restored.asset(restored.state.templates[0].layers[0].assetId).opaqueAccepted,true);
+});
 test('HTTP recusa origens externas, persiste ajustes e permite repetir só uma falha', async () => {
   const { root } = await fixture(); const { app, store } = await createApp(path.join(root, 'api'));
   const server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r));

@@ -25,7 +25,7 @@ Nesse caso, abra a porta escolhida manualmente. O arquivo `iniciar.cmd` usa a po
 ## Fluxo
 
 1. **Importar:** escolha/arraste um ZIP, várias capas ou um catálogo JSON/CSV junto das imagens. Para adicionar imagens a um catálogo já importado, importe os arquivos depois. Os originais são copiados, nunca alterados.
-2. **Carregar PNGs:** forneça a faixa, a logo e outras camadas originais com fundo transparente. PNGs inteiramente opacos são recusados. Screenshots de referência não viram adesivos.
+2. **Carregar PNGs:** forneça a faixa, a logo e outras camadas originais, preferencialmente com fundo transparente. PNGs inteiramente opacos são recusados por padrão. Para usar um PNG com fundo, ative **Aceitar PNG opaco mantendo o fundo** antes do upload: o fundo será preservado integralmente, com aviso na prévia e na exportação. Nenhum fundo é removido ou redesenhado. Screenshots de referência não viram adesivos.
 3. **Configurar:** crie um modelo com ＋. Defina nome, plataforma e disponibilidade; adicione ao menos duas camadas. Escolha âncora, largura proporcional, margens e opacidade. A ordem de cima para baixo define a composição; a última camada fica sobre as anteriores. Duplique modelos para outros PNGs/plataformas.
 4. **Aplicar:** selecione produtos e confirme a disponibilidade. Aplique aos selecionados compatíveis, a todos da plataforma ou ao produto atual. Produtos de outra plataforma são ignorados. O conteúdo escrito no PNG não é interpretado: escolha a faixa correta para o modelo.
 5. **Revisar:** clique em cada produto; compare original e resultado e use o zoom. Em **Só este produto**, troque/aprove a base, confirme a disponibilidade ou ajuste enquadramento e camadas individualmente. Marque **Conferi esta prévia e posso exportar**. Qualquer mudança na base, composição ou modelo exige nova revisão.
@@ -39,7 +39,7 @@ O ZIP contém `slug--ID.jpg`/`.png`, `export-manifest.csv`, `export-manifest.jso
 
 O padrão preserva a proporção e resolução da base. 4:5, 3:4, quadrado e dimensões personalizadas são escolhas explícitas. **Arte inteira + preenchimento** mantém a arte sem esticar, com a cor escolhida visível na prévia. **Recorte explícito** oferece foco horizontal/vertical e exige confirmação individual. A base não é ampliada; recortes com dimensões maiores que o conteúdo disponível ficam pendentes. Um quadro maior com preenchimento pode conter a arte no tamanho nativo. Não há promessa de ganho de qualidade.
 
-Prévia e exportação passam pelo mesmo compositor e encoder. A prévia informa as dimensões reais da saída, tamanho codificado e qualidade. JPEG achata transparência na cor escolhida; PNG preserva a transparência da composição quando a base/quadro a contiver. Opacidade multiplica o canal alpha do PNG.
+Prévia e exportação passam pelo mesmo compositor e encoder. A prévia informa as dimensões reais da saída, tamanho codificado e qualidade. JPEG achata transparência na cor escolhida; PNG preserva a transparência da composição quando a base/quadro a contiver. Opacidade multiplica o canal alpha do PNG. Um adesivo opaco cobre a arte com o próprio fundo; para cantos transparentes, forneça o PNG exportado com transparência. A opção de preservar fundos opacos acompanha os PNGs no pacote portátil de modelos.
 
 ## Pacote reconhecido
 
