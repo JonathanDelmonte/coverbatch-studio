@@ -1,6 +1,6 @@
 # CoverBatch Studio — usar no Windows
 
-1. Baixe **CoverBatch-Studio-Windows-x64.zip** na [página de download](https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest).
+1. Baixe **CoverBatch-Studio-Windows-x64.zip** na [página de download](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest).
 2. Clique com o botão direito no ZIP e escolha **Extrair tudo**. Escolha uma pasta sua com permissão de gravação, como Documentos. Não execute de dentro do ZIP.
 3. Dentro da pasta **CoverBatch Studio**, dê dois cliques em **Abrir CoverBatch Studio.cmd**.
 4. O navegador abrirá a ferramenta. Mantenha a janela do programa aberta durante o uso. Para encerrar, feche essa janela.
@@ -37,4 +37,4 @@ Para atualizar, encerre o programa, faça backup de **dados-locais** e extraia a
 - A janela mostra o endereço local: copie-o para o navegador se ele não abrir automaticamente.
 - Se outra aplicação ocupar a porta padrão, a ferramenta escolhe outra porta local automaticamente. Abrir o mesmo pacote novamente reabre a sessão existente.
 
-Código e novas versões: https://github.com/JonathanDelmonte/coverbatch-studio
+Código e novas versões: https://github.com/ZIRTUNO/coverbatch-studio

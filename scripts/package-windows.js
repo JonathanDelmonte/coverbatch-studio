@@ -62,7 +62,7 @@ export async function buildWindows({ nodeZip, offline = false, profileRoot } = {
   const guide=(await readFile(path.join(projectRoot,'GUIA-CLIENTE.md'),'utf8')).replace(/^#+ /gm,'').replaceAll('**','').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1 ($2)');
   const clientGuide=branded ? guide.replaceAll('CoverBatch Studio','Criador de capas Kabban').replace(/^1\. Baixe .+$/m,'1. Use o ZIP privado Criador-de-capas-Kabban-Windows-x64-PRIVADO.zip recebido diretamente. Ele já inclui os modelos e as marcas da loja.') : guide;
   await writeFile(path.join(root,'LEIA-ME.txt'),folderName+' '+pkg.version+'\r\n\r\n'+(branded?'PACOTE PRIVADO: contém as marcas e a referência fornecidas para a Kabban. Compartilhe diretamente com o cliente.\r\n\r\n':'')+clientGuide.replaceAll('\n','\r\n'));
-  await writeFile(path.join(root,'THIRD-PARTY-NOTICES.txt'),'Node.js '+config.nodeVersion+' — licença e avisos em runtime/LICENSE.txt.\r\nDependências JavaScript e Sharp — licenças preservadas nos respectivos diretórios em app/node_modules.\r\nCódigo da ferramenta: https://github.com/JonathanDelmonte/coverbatch-studio\r\n');
+  await writeFile(path.join(root,'THIRD-PARTY-NOTICES.txt'),'Node.js '+config.nodeVersion+' — licença e avisos em runtime/LICENSE.txt.\r\nDependências JavaScript e Sharp — licenças preservadas nos respectivos diretórios em app/node_modules.\r\nCódigo da ferramenta: https://github.com/ZIRTUNO/coverbatch-studio\r\n');
   const files=[];
   async function collect(dir,prefix=''){
     for(const item of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){

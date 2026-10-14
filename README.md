@@ -4,9 +4,9 @@ Ferramenta local para compor capas em lote com PNGs, modelos reutilizáveis, pr�
 
 ## Baixar e usar no Windows
 
-[![Baixar para Windows 64 bits](docs/download-windows.svg)](https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest/download/CoverBatch-Studio-Windows-x64.zip)
+[![Baixar para Windows 64 bits](docs/download-windows.svg)](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest/download/CoverBatch-Studio-Windows-x64.zip)
 
-1. **Baixe o ZIP** pelo botão acima ou pela [página de releases](https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest).
+1. **Baixe o ZIP** pelo botão acima ou pela [página de releases](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest).
 2. **Extraia tudo** para uma pasta sua. Não abra o programa dentro do ZIP.
 3. Dê dois cliques em **Abrir CoverBatch Studio.cmd**. O navegador abre automaticamente.
 

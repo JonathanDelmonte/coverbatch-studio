@@ -5,7 +5,7 @@ chcp 65001 >nul
 where node >nul 2>nul
 if errorlevel 1 (
   echo Para usar sem instalar Node.js, baixe o pacote Windows na pagina de releases.
-  echo https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest
+  echo https://github.com/ZIRTUNO/coverbatch-studio/releases/latest
   pause
   exit /b 1
 )
