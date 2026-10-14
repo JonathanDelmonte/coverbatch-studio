@@ -1,0 +1,11 @@
+node_modules/
+.local-data/
+work/
+outputs/
+*.zip
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.env
+.env*
