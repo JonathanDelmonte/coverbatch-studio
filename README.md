@@ -1,8 +1,22 @@
 # CoverBatch Studio
 
-Ferramenta local para compor capas em lote com PNGs transparentes, modelos reutilizáveis e um arquivo por produto. Interface em português, Node.js 24 e Sharp. Funciona com arquivos soltos ou um pacote de capas e catálogo. Não depende de plataforma de comércio eletrônico.
+Ferramenta local para compor capas em lote com PNGs, modelos reutilizáveis, prévias e um arquivo por produto. Interface em português. Funciona com arquivos soltos ou um pacote de capas e catálogo. Não depende de plataforma de comércio eletrônico.
 
-## Instalar no Windows
+## Baixar e usar no Windows
+
+[![Baixar para Windows 64 bits](docs/download-windows.svg)](https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest/download/CoverBatch-Studio-Windows-x64.zip)
+
+1. **Baixe o ZIP** pelo botão acima ou pela [página de releases](https://github.com/JonathanDelmonte/coverbatch-studio/releases/latest).
+2. **Extraia tudo** para uma pasta sua. Não abra o programa dentro do ZIP.
+3. Dê dois cliques em **Abrir CoverBatch Studio.cmd**. O navegador abre automaticamente.
+
+O pacote portátil já inclui Node.js 24, Sharp e as dependências. **Não precisa instalar Node.js, usar comandos ou criar conta.** Funciona localmente, sem internet após o download. Destinado a Windows 10/11 de 64 bits (x64). Mantenha a janela do programa aberta durante o uso; feche-a para encerrar.
+
+O download público contém somente a ferramenta. Imagens, catálogos e PNGs de marcas devem ser importados pelo usuário ou enviados separadamente em um pacote privado de modelos. [Guia completo para o cliente](GUIA-CLIENTE.md).
+
+Na distribuição portátil, os arquivos ficam em **dados-locais**, ao lado de **app** e **runtime**. Faça backup dessa pasta. Para atualizar, encerre o programa e extraia a nova versão na mesma pasta, preservando **dados-locais**. Abrir o mesmo pacote novamente reabre a sessão existente; instalações diferentes usam seus próprios dados e portas locais.
+
+## Executar a partir do código (desenvolvimento)
 
 1. Instale **Node.js 24 (64 bits)** do [site oficial](https://nodejs.org/). Confira `node --version`: deve começar com `v24`.
 2. Extraia o código para uma pasta sua. Abra o PowerShell nessa pasta.
@@ -20,7 +34,7 @@ $env:PORT = '4318'
 npm start
 ```
 
-Nesse caso, abra a porta escolhida manualmente. O arquivo `iniciar.cmd` usa a porta padrão. A instalação baixa dependências do npm; depois disso o processamento funciona sem internet.
+O lançador abre o navegador após o servidor ficar pronto. Se a porta estiver ocupada, tenta outras portas locais. A instalação do código baixa dependências do npm; depois disso o processamento funciona sem internet.
 
 ## Fluxo
 
@@ -68,7 +82,7 @@ CSV aceita delimitador `;` ou `,`, cabeçalhos `id` (ou `id_produto`), `slug`, `
 
 ## Dados privados e portabilidade
 
-Tudo é salvo em **`.local-data/`** ao lado do código: originais copiados por hash, catálogo, modelos, preferências e exportações. Faça backup dessa pasta para preservar o projeto completo. Não a adicione ao Git. `work/`, `outputs/`, `.local-data/`, imagens e ZIPs são ignorados pelo versionamento. O repositório deve conter apenas código, documentação e testes sintéticos.
+Na execução pelo código, tudo é salvo em **`.local-data/`**; no pacote portátil, em **dados-locais**: originais copiados por hash, catálogo, modelos, preferências e exportações. Faça backup dessa pasta para preservar o projeto completo. Não a adicione ao Git. `work/`, `outputs/`, `.local-data/`, `dados-locais/`, imagens e ZIPs são ignorados pelo versionamento. O repositório deve conter apenas código, documentação e testes sintéticos.
 
 **Exportar modelos** gera um ZIP com `templates.json` e os próprios PNGs referenciados. **Importar modelos** restaura as camadas em outro computador, sem depender de caminhos desta máquina. Esse ZIP pode conter marcas privadas; compartilhe-o apenas com quem você autorizar.
 
@@ -88,3 +102,16 @@ Os testes sintéticos cobrem pixels de transparência/opacidade/margem, proporç
 `server.js`: API local e persistência. `lib/importer.js`: associação de arquivos e catálogo. `lib/render.js`: composição determinística, qualidade, nomes e lote. `lib/zip.js`: leitura limitada sem extrair caminhos do usuário. `public/`: interface sem compilação ou serviços externos. `test/`: testes Node. `package-lock.json`: versões reproduzíveis das dependências.
 
 Limites da primeira versão: uma saída por produto, edição por controles numéricos e âncoras, sem editor gráfico completo. A confirmação de revisão é feita por produto. Não há detecção automática dos textos presentes nas fotos nem reconhecimento do texto das faixas. A fidelidade da composição final depende dos PNGs originais fornecidos pelo usuário.
+
+## Gerar a distribuição Windows
+
+Em Windows x64, com Node.js 24 e as dependências do projeto:
+
+```powershell
+npm test
+npm run package:windows
+```
+
+O empacotador baixa o runtime do site oficial do Node.js e exige o SHA-256 definido em `packaging/windows.json`. Instala dependências de produção em uma pasta limpa, inclui os binários nativos do Sharp e as licenças, testa o runtime e cria `outputs/CoverBatch-Studio-Windows-x64.zip` e seu checksum. Não copia `.local-data`, `dados-locais`, `work`, `outputs` ou arquivos da loja. O runtime é fixado por versão e hash para builds reproduzíveis; sua atualização deve ser revisada no arquivo de configuração.
+
+Para usar um arquivo já baixado e dependências já presentes no cache, acrescente `-- --node-zip "caminho\\node.zip" --offline`. O nome do asset de release permanece fixo para manter o botão de download válido entre versões.

@@ -4,12 +4,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { readFile, writeFile, unlink } from 'node:fs/promises';
-import { Store } from './lib/store.js';
+import { Store, hash } from './lib/store.js';
 import { importFiles, exportTemplates, importTemplates } from './lib/importer.js';
 import { compose, encode, readiness, validateTemplate, runJob, newJob } from './lib/render.js';
 
 export async function createApp(dataRoot) {
   const store = await new Store(dataRoot).init();
+  const packageInfo = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'));
   const app = express(); const token = randomBytes(24).toString('hex');
   const jobs = new Map(); const imports = new Map(); let importing = false;
   const upload = multer({ dest: path.join(store.root, 'temp'), limits: { fileSize: 600_000_000, files: 2000, fieldSize: 2_000_000 } });
@@ -26,6 +27,14 @@ export async function createApp(dataRoot) {
   });
   app.use(express.json({ limit: '2mb' }));
   app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), 'public')));
+  app.get('/api/health', (_req, res) => res.json({ app: 'coverbatch-studio', version: packageInfo.version, instanceId: hash(store.root.toLowerCase()).slice(0, 24) }));
+  app.post('/api/shutdown', async (_req, res) => {
+    const stop = app.get('coverbatch.stop');
+    if (typeof stop !== 'function') return res.status(409).json({ error: 'Encerre esta instância pela janela do programa.' });
+    await store.writes;
+    res.once('finish', () => stop());
+    res.json({ ok: true });
+  });
   app.get('/api/state', (_req, res) => res.json({ ...store.publicState(), token, readiness: Object.fromEntries(store.state.products.map(p => [p.key, readiness(store, p)])) }));
   app.get('/api/assets/:id', (req, res) => {
     const a = store.asset(req.params.id); res.setHeader('Cache-Control', 'private, max-age=3600');

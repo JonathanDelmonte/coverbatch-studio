@@ -1,6 +1,6 @@
 {
   "name": "coverbatch-studio",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Local batch cover compositor with portable PNG templates and product manifests",
   "type": "module",
@@ -8,10 +8,12 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/launcher.js",
     "test": "node --test test/*.test.js",
     "validate:real": "node scripts/validate-real.js",
-    "package": "node scripts/package-source.js"
+    "package": "node scripts/package-source.js",
+    "package:windows": "node scripts/package-windows.js",
+    "verify:windows": "node scripts/verify-windows.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
