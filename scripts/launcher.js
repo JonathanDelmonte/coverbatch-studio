@@ -14,7 +14,7 @@ export function openBrowser(url) {
   child.unref();
 }
 
-export async function launch({ dataRoot, firstPort = 4317, portCount = 20, browser = openBrowser } = {}) {
+export async function launch({ dataRoot, profileRoot, firstPort = 4317, portCount = 20, browser = openBrowser } = {}) {
   const root = path.resolve(dataRoot);
   const instanceId = hash(root.toLowerCase()).slice(0, 24);
   if (!Number.isInteger(firstPort) || firstPort < 1024 || firstPort + portCount > 65535) throw new Error('Porta local inválida.');
@@ -30,7 +30,7 @@ export async function launch({ dataRoot, firstPort = 4317, portCount = 20, brows
       }
     } catch { /* This port is free or belongs to another local program. */ }
   }
-  const { app, store } = await createApp(root);
+  const { app, store } = await createApp(root, { profileRoot });
   for (let port = firstPort; port < firstPort + portCount; port++) {
     try {
       const server = await new Promise((resolve, reject) => {
@@ -53,7 +53,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (Number(process.versions.node.split('.')[0]) !== 24) throw new Error('Esta versão requer Node.js 24. Use o pacote portátil para Windows.');
     const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
     const dataRoot = process.env.COVERBATCH_DATA_DIR || (process.env.COVERBATCH_PORTABLE_ROOT ? path.join(process.env.COVERBATCH_PORTABLE_ROOT, 'dados-locais') : path.join(projectRoot, '.local-data'));
-    await launch({ dataRoot, firstPort: Number(process.env.PORT || 4317) });
+    const profileRoot = process.env.COVERBATCH_PROFILE_DIR || (process.env.COVERBATCH_PORTABLE_ROOT ? path.join(process.env.COVERBATCH_PORTABLE_ROOT, 'perfil') : undefined);
+    await launch({ dataRoot, profileRoot, firstPort: Number(process.env.PORT || 4317) });
   } catch (e) {
     console.error(`Não foi possível abrir o CoverBatch Studio.\n${e.message}\n`);
     process.exitCode = 1;

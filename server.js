@@ -7,9 +7,11 @@ import { readFile, writeFile, unlink } from 'node:fs/promises';
 import { Store, hash } from './lib/store.js';
 import { importFiles, exportTemplates, importTemplates } from './lib/importer.js';
 import { compose, encode, readiness, validateTemplate, runJob, newJob } from './lib/render.js';
+import { seedProfile } from './lib/profile.js';
 
-export async function createApp(dataRoot) {
+export async function createApp(dataRoot, { profileRoot } = {}) {
   const store = await new Store(dataRoot).init();
+  await seedProfile(store, profileRoot);
   const packageInfo = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'));
   const app = express(); const token = randomBytes(24).toString('hex');
   const jobs = new Map(); const imports = new Map(); let importing = false;
@@ -36,6 +38,11 @@ export async function createApp(dataRoot) {
     res.json({ ok: true });
   });
   app.get('/api/state', (_req, res) => res.json({ ...store.publicState(), token, readiness: Object.fromEntries(store.state.products.map(p => [p.key, readiness(store, p)])) }));
+  app.get('/api/profile/:file', (req, res) => {
+    const allowed = { 'developer-logo.svg': store.state.profile?.hasDeveloperLogo, 'reference.jpg': store.state.profile?.hasReference };
+    if (!allowed[req.params.file]) return res.status(404).json({ error: 'Referência não disponível.' });
+    res.sendFile(path.join(store.root, 'profile', req.params.file), { dotfiles: 'allow' });
+  });
   app.get('/api/assets/:id', (req, res) => {
     const a = store.asset(req.params.id); res.setHeader('Cache-Control', 'private, max-age=3600');
     res.type({ png: 'png', jpeg: 'jpg', webp: 'webp' }[a.format] || 'application/octet-stream').sendFile(store.assetPath(a.id), { dotfiles: 'allow' });
@@ -55,7 +62,7 @@ export async function createApp(dataRoot) {
   app.get('/api/import/:id', (req, res) => { const r = imports.get(req.params.id); if (!r) return res.status(404).json({ error: 'Importação não encontrada.' }); res.json(r); });
   app.post('/api/layers', upload.array('files', 20), async (req, res) => {
     const added = [], errors = [];
-    try { for (const f of req.files || []) { try { added.push(await store.addAsset(await readFile(f.path), f.originalname, 'layer', undefined, { allowOpaque: req.body.allowOpaque === 'true' })); } catch (e) { errors.push(e.message); } } await store.save(); }
+    try { for (const f of req.files || []) { try { const a = await store.addAsset(await readFile(f.path), f.originalname, 'layer', undefined, { allowOpaque: req.body.allowOpaque === 'true' }); if (['banner', 'logo'].includes(req.body.role)) a.role = req.body.role; added.push(a); } catch (e) { errors.push(e.message); } } await store.save(); }
     finally { await cleanup(req.files || []); }
     res.json({ added, errors });
   });
@@ -71,6 +78,29 @@ export async function createApp(dataRoot) {
     store.state.templates = store.state.templates.filter(t => t.id !== req.params.id);
     for (const p of store.state.products.filter(p => p.templateId === req.params.id)) { p.templateId = null; p.reviewed = false; }
     await store.save(); res.json({ ok: true });
+  });
+  app.post('/api/manual-variants', async (req, res) => {
+    const { keys, availabilityConfirmed } = req.body;
+    if (!Array.isArray(keys) || keys.length > 1500 || !availabilityConfirmed) throw new Error('Selecione capas avulsas e confirme envio imediato.');
+    const templates = ['PS4','PS5'].map(platform => store.state.templates.find(t => t.platform === platform && t.availability === 'immediate' && t.layers.length >= 2));
+    if (templates.some(t => !t)) throw new Error('Prepare os modelos PS4 e PS5 com faixa e logo.');
+    const result = [], skipped = [];
+    for (const key of keys) {
+      const source = store.state.products.find(p => p.key === key);
+      if (!source?.manualAsset || !source.baseId || store.asset(source.baseId).error) { skipped.push(key); continue; }
+      const family = source.variantSource || source.key;
+      const slug = source.variantSlug || source.slug;
+      for (const t of templates) {
+        let p = store.state.products.find(p => p.variantSource === family && p.platform === t.platform);
+        if (!p) {
+          if (!source.variantSource) p = source;
+          else { const id = 'local-' + randomUUID().slice(0,8); p = {...structuredClone(source),key:id,id}; store.state.products.push(p); }
+        }
+        Object.assign(p,{variantSource:family,variantSlug:slug,slug:slug+'-'+t.platform.toLowerCase(),platform:t.platform,templateId:t.id,availability:'immediate',selected:true,reviewed:false,override:{}});
+        result.push(p.key);
+      }
+    }
+    await store.save(); res.json({keys:[...new Set(result)],skipped});
   });
   app.patch('/api/products', async (req, res) => {
     const { keys, changes } = req.body;

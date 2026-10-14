@@ -10,9 +10,15 @@ O pacote já inclui Node.js 24 e as dependências. Não precisa instalar Node.js
 ## Preparar suas capas
 
 1. **Importar:** selecione/arraste suas imagens ou o ZIP de capas e catálogo.
-2. **Configurar:** carregue seus PNGs e crie os modelos. Se recebeu um ZIP de modelos, clique em **Importar modelos**: os PNGs vêm junto.
+2. **Configurar:** as áreas separadas mostram a faixa à esquerda e a logo à direita. Arraste cada PNG para a área correspondente. Se recebeu a edição privada da Kabban, os dois modelos e os três PNGs já vêm preparados.
 3. **Revisar:** selecione produtos, confirme plataforma/disponibilidade, aplique o modelo e confira cada prévia.
 4. **Exportar:** gere e baixe o ZIP; extraia as imagens e envie cada arquivo ao produto indicado no manifesto.
+
+Para uma foto avulsa, arraste a imagem, escolha PS4 ou PS5, confirme a disponibilidade e clique em **Usar padrão e conferir**. Após conferir a prévia, escolha **JPEG** ou **PNG** ao lado de **Baixar esta imagem**. Para várias capas, selecione os produtos e use **Gerar ZIP dos selecionados**. Um ZIP de entrada também pode conter somente imagens, sem catálogo.
+
+Para preparar as duas versões da mesma capa avulsa, escolha **PS4 + PS5**. Elas reutilizam a arte e recebem nomes distintos; confira cada prévia. Esses itens têm IDs locais. Informe os IDs/slugs reais em **Só este produto → Identificação do produto** se precisar relacioná-los ao catálogo. Produtos importados com catálogo seguem suas próprias plataformas.
+
+Na edição privada da Kabban, abra **Abrir Criador de capas Kabban.cmd**. A tela mostra a referência de posição e tamanho antes da importação. Os modelos usam medidas proporcionais e mantêm a proporção original da capa. **Restaurar padrão** recupera a posição e o acabamento das camadas da referência; os arquivos originais permanecem intactos. Para pré-venda, forneça uma faixa com o texto correto e crie outro modelo.
 
 A ferramenta não envia arquivos à loja, não muda produtos e não publica suas imagens. Fotos publicadas usadas como base exigem aprovação porque podem já conter adesivos.
 

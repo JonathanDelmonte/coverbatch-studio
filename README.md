@@ -12,7 +12,7 @@ Ferramenta local para compor capas em lote com PNGs, modelos reutilizáveis, pr�
 
 O pacote portátil já inclui Node.js 24, Sharp e as dependências. **Não precisa instalar Node.js, usar comandos ou criar conta.** Funciona localmente, sem internet após o download. Destinado a Windows 10/11 de 64 bits (x64). Mantenha a janela do programa aberta durante o uso; feche-a para encerrar.
 
-O download público contém somente a ferramenta. Imagens, catálogos e PNGs de marcas devem ser importados pelo usuário ou enviados separadamente em um pacote privado de modelos. [Guia completo para o cliente](GUIA-CLIENTE.md).
+O download público contém somente a ferramenta. Imagens, catálogos e PNGs de marcas devem ser importados pelo usuário ou enviados diretamente em um pacote privado. A edição privada pode incluir identidade, referência de composição e modelos com seus PNGs, sem incluir o catálogo ou as capas do cliente. [Guia completo para o cliente](GUIA-CLIENTE.md).
 
 Na distribuição portátil, os arquivos ficam em **dados-locais**, ao lado de **app** e **runtime**. Faça backup dessa pasta. Para atualizar, encerre o programa e extraia a nova versão na mesma pasta, preservando **dados-locais**. Abrir o mesmo pacote novamente reabre a sessão existente; instalações diferentes usam seus próprios dados e portas locais.
 
@@ -45,6 +45,8 @@ O lançador abre o navegador após o servidor ficar pronto. Se a porta estiver o
 5. **Revisar:** clique em cada produto; compare original e resultado e use o zoom. Em **Só este produto**, troque/aprove a base, confirme a disponibilidade ou ajuste enquadramento e camadas individualmente. Marque **Conferi esta prévia e posso exportar**. Qualquer mudança na base, composição ou modelo exige nova revisão.
 6. **Exportar:** escolha JPEG (qualidade 85–100, padrão 94) ou PNG sem perdas. O limite em KB é opcional. O JPEG pode reduzir até a qualidade mínima configurada; dimensões não são reduzidas silenciosamente para atingir o limite. Itens inviáveis ficam pendentes. Baixe uma imagem ou o ZIP. Corrija falhas e use **Repetir apenas falhas e pendentes** para gerar um novo ZIP contendo só esses itens.
 
+Na importação, a referência visual indica a faixa no canto inferior esquerdo e a logo no inferior direito. Há áreas independentes para arrastar capas/ZIP, faixa e logo. Uma foto avulsa oferece um atalho para escolher plataforma, confirmar disponibilidade e revisar com o modelo pronto. Um ZIP sem catálogo funciona como um conjunto de imagens avulsas. O botão **Baixar esta imagem** oferece JPEG e PNG, sem precisar exportar o lote.
+
 O ZIP contém `slug--ID.jpg`/`.png`, `export-manifest.csv`, `export-manifest.json` e orientações. Nomes repetidos recebem sufixos sem sobrescrever arquivos. O índice preserva ID, slug, plataforma, modelo, disponibilidade, origem e hash da base, dimensões, qualidade e hash do resultado. Ele não é um arquivo de importação de catálogo.
 
 **Extraia o ZIP e envie as imagens aos produtos indicados. Uma loja não deve ser presumida capaz de receber o ZIP e distribuir imagens automaticamente.**
@@ -53,7 +55,7 @@ O ZIP contém `slug--ID.jpg`/`.png`, `export-manifest.csv`, `export-manifest.jso
 
 O padrão preserva a proporção e resolução da base. 4:5, 3:4, quadrado e dimensões personalizadas são escolhas explícitas. **Arte inteira + preenchimento** mantém a arte sem esticar, com a cor escolhida visível na prévia. **Recorte explícito** oferece foco horizontal/vertical e exige confirmação individual. A base não é ampliada; recortes com dimensões maiores que o conteúdo disponível ficam pendentes. Um quadro maior com preenchimento pode conter a arte no tamanho nativo. Não há promessa de ganho de qualidade.
 
-Prévia e exportação passam pelo mesmo compositor e encoder. A prévia informa as dimensões reais da saída, tamanho codificado e qualidade. JPEG achata transparência na cor escolhida; PNG preserva a transparência da composição quando a base/quadro a contiver. Opacidade multiplica o canal alpha do PNG. Um adesivo opaco cobre a arte com o próprio fundo; para cantos transparentes, forneça o PNG exportado com transparência. A opção de preservar fundos opacos acompanha os PNGs no pacote portátil de modelos.
+Prévia e exportação passam pelo mesmo compositor e encoder. A prévia informa as dimensões reais da saída, tamanho codificado e qualidade. JPEG achata transparência na cor escolhida; PNG preserva a transparência da composição quando a base/quadro a contiver. Opacidade multiplica o canal alpha do PNG. Um PNG opaco mantém seu fundo. O acabamento opcional pode ignorar uma margem superior do PNG e arredondar seus cantos somente na composição. Os originais permanecem intactos; não há remoção automática de fundo ou redesenho. Essas opções acompanham os modelos portáteis.
 
 ## Pacote reconhecido
 
@@ -115,3 +117,5 @@ npm run package:windows
 O empacotador baixa o runtime do site oficial do Node.js e exige o SHA-256 definido em `packaging/windows.json`. Instala dependências de produção em uma pasta limpa, inclui os binários nativos do Sharp e as licenças, testa o runtime e cria `outputs/CoverBatch-Studio-Windows-x64.zip` e seu checksum. Não copia `.local-data`, `dados-locais`, `work`, `outputs` ou arquivos da loja. O runtime é fixado por versão e hash para builds reproduzíveis; sua atualização deve ser revisada no arquivo de configuração.
 
 Para usar um arquivo já baixado e dependências já presentes no cache, acrescente `-- --node-zip "caminho\\node.zip" --offline`. O nome do asset de release permanece fixo para manter o botão de download válido entre versões.
+
+Um perfil privado opcional contém `profile.json` (version 1, id, title, developer e indicadores hasDeveloperLogo/hasReference), `templates.zip` exportado pela ferramenta, `developer-logo.svg` e `reference.jpg`. Use `-- --profile-dir "pasta-privada"` para gerar a edição privada em um ZIP separado. O empacotador copia somente esses quatro arquivos; não inclui catálogo, capas ou estado da sessão. A primeira abertura instala os modelos e suas camadas em `dados-locais`; as próximas preservam as edições do cliente. Nunca publique esse ZIP ou a pasta do perfil no repositório/release público.
