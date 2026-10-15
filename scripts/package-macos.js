@@ -1,10 +1,10 @@
-import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { sha256 as hash } from '../lib/files.js';
-import { projectRoot, copyApplication, copyProfile, verifiedDownload, thirdPartyNotices, renderGuide } from './package-common.js';
+import { projectRoot, freshStage, copyApplication, copyProfile, verifiedDownload, thirdPartyNotices, renderGuide } from './package-common.js';
 import { readTarGz, machO, icns, infoPlist, writeMacZip } from './macos-app.js';
 
 // The macOS app, built on Windows or anywhere else: one universal .app (Apple
@@ -20,7 +20,7 @@ export async function buildMacos({ profileRoot, offline = false } = {}) {
   const pkg = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
   const work = path.join(projectRoot, 'work');
   await mkdir(work, { recursive: true });
-  const stage = await mkdtemp(path.join(work, 'macos-build-'));
+  const stage = await freshStage('macos');
   const branded = !!profileRoot;
   const name = branded ? 'Criador de capas Kabban' : 'CoverBatch Studio';
   const executable = branded ? 'criador-de-capas' : 'coverbatch-studio';

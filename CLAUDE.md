@@ -4,15 +4,18 @@ Ferramenta local (Windows e macOS, Node 22 ou mais novo) que carimba capas de jo
 loja Yampi: o cliente solta um ZIP, uma pasta ou imagens e recebe cada capa com o **selo**
 (logotipo oficial PS4/PS5 + frase) no canto inferior esquerdo e a **logo da loja** no canto
 inferior direito. A interface é em português do Brasil; o código e os comentários, em inglês.
-O README descreve o produto; este arquivo, o que um agente precisa para mexer no código.
+O README descreve o produto; `docs/DESENVOLVIMENTO.md`, como rodar, testar e empacotar; este arquivo,
+o que um agente precisa para mexer no código.
 
 ## Comandos
 
 - `npm ci` · `npm start` (flags do lançador: `--data <pasta> --profile <pasta> --port <n> --no-browser`) · `npm test`
+  (pastas de teste em `work/testes`, apagadas no fim; `KEEP_TEST_DIRS=1` mantém)
 - `npm run validate:real -- <zip-ou-pasta> [--logo arquivo]`: motor real + folha de contato em `outputs/`
 - `npm run package:windows [-- --profile-dir perfil]` → ZIP portátil + `Instalar-*.exe` + guia HTML em `outputs/`
 - `npm run verify:windows [-- --private-profile] [--com-registro]` (Windows x64; instala e desinstala numa pasta de teste)
-- `npm run package:macos [-- --profile-dir perfil]` → `.app` universal num ZIP (roda no Windows)
+- `npm run package:macos [-- --profile-dir perfil]` → `.app` universal num ZIP (roda no Windows).
+  Montagem em `work/builds/` (só a última de cada tipo); `work/` guarda também `dev-data`, `downloads`, `npm-cache`.
 - `npm run verify:macos [-- --private-profile]`: estrutura do ZIP + lançador bash real no Git Bash com stubs
 - Prévia no navegador: configuração `coverbatch-dev` em `.claude/launch.json` (dados em `work/dev-data`).
   Testes automáticos de interface: rode contra outra instância (`--port 4391 --data work/...`), não na
@@ -54,7 +57,8 @@ O README descreve o produto; este arquivo, o que um agente precisa para mexer no
   altera estado; CSP sem recursos externos. Sem rede em tempo de execução.
 - Nomes vindos de ZIP/pastas são dados de exibição e pistas, nunca caminhos no disco.
 - Nunca versionar capas, logos ou kits de clientes (`.gitignore` cobre imagens, ZIPs e `perfil/`).
-  Testes e validações usam material sintético marcado TESTE.
+  Testes e validações usam material sintético marcado TESTE. Capturas em `docs/` também: nunca a capa
+  do FC 27 nem a marca Kabban (`!docs/*.png` libera só essa pasta).
 - Rodar `npm test` depois de qualquer edição, inclusive "cosméticas" (um sombreamento de variável
   em `layout.js` já moveu a logo para o topo sem ninguém notar até a folha de contato).
 - Novas dependências passam pelo AgentAvow antes de entrar.

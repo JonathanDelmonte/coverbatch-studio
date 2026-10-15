@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, readFile, stat } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,14 @@ import { sha256 } from '../lib/files.js';
 // What the Windows and macOS packages share: the files of the app, the private
 // profile (an explicit allowlist) and the official runtimes, checked by hash.
 export const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// One build folder per kind in work/builds: the previous one goes when a new build starts.
+export async function freshStage(kind) {
+  const dir = path.join(projectRoot, 'work', 'builds');
+  await mkdir(dir, { recursive: true });
+  for (const old of await readdir(dir)) if (old.startsWith(`${kind}-`)) await rm(path.join(dir, old), { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  return mkdtemp(path.join(dir, `${kind}-`));
+}
 
 // Everything the app needs at runtime, listed from the folders themselves.
 export async function applicationFiles() {

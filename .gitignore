@@ -12,3 +12,6 @@ outputs/
 *.env
 .env*
 .claude/data/
+
+# Screenshots for the README: synthetic TESTE material only.
+!docs/*.png
