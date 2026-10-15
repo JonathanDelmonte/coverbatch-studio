@@ -1,121 +1,126 @@
 # CoverBatch Studio
 
-Ferramenta local para compor capas em lote com PNGs, modelos reutilizáveis, prévias e um arquivo por produto. Interface em português. Funciona com arquivos soltos ou um pacote de capas e catálogo. Não depende de plataforma de comércio eletrônico.
+Carimba capas de jogos para a loja virtual. Você solta um ZIP, uma pasta ou imagens; cada capa sai com o **selo da plataforma** (os logotipos oficiais PS4 ou PS5 + "ENVIO IMEDIATO", "ACESSO IMEDIATO" ou "PRÉ-VENDA") no canto inferior esquerdo e a **logo da loja** no canto inferior direito, sempre na mesma posição e proporção. Tudo roda no próprio computador, sem internet e sem conta. Funciona no Windows e no Mac.
 
 ## Baixar e usar no Windows
 
-[![Baixar para Windows 64 bits](docs/download-windows.svg)](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest/download/CoverBatch-Studio-Windows-x64.zip)
+[![Baixar para Windows 64 bits](docs/download-windows.svg)](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest/download/Instalar-CoverBatch-Studio.exe)
 
-1. **Baixe o ZIP** pelo botão acima ou pela [página de releases](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest).
-2. **Extraia tudo** para uma pasta sua. Não abra o programa dentro do ZIP.
-3. Dê dois cliques em **Abrir CoverBatch Studio.cmd**. O navegador abre automaticamente.
+1. **Baixe o instalador** pelo botão acima ou pela [página de releases](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest).
+2. Dê dois cliques em **Instalar-CoverBatch-Studio.exe** e clique em **Instalar**. Não pede senha de administrador: a instalação é só para o usuário atual.
+3. Abra pelo atalho **CoverBatch Studio** (Área de Trabalho ou menu Iniciar). O programa abre na própria janela; fechar a janela encerra o programa.
 
-O pacote portátil já inclui Node.js 24, Sharp e as dependências. **Não precisa instalar Node.js, usar comandos ou criar conta.** Funciona localmente, sem internet após o download. Destinado a Windows 10/11 de 64 bits (x64). Mantenha a janela do programa aberta durante o uso; feche-a para encerrar.
+O instalador traz o Node.js 24 e as dependências: não é preciso instalar mais nada. Windows 10/11 de 64 bits. Atualizar é rodar o instalador da nova versão (lotes e kit são mantidos); remover é em Configurações > Aplicativos. Sem instalar: extraia `CoverBatch-Studio-Windows-x64.zip` e abra **CoverBatch Studio.exe**.
 
-O download público contém somente a ferramenta. Imagens, catálogos e PNGs de marcas devem ser importados pelo usuário ou enviados diretamente em um pacote privado. A edição privada pode incluir identidade, referência de composição e modelos com seus PNGs, sem incluir o catálogo ou as capas do cliente. [Guia completo para o cliente](GUIA-CLIENTE.md).
+O instalador ainda não tem assinatura digital, então o Windows mostra "O Windows protegeu o computador" na primeira vez (**Mais informações** > **Executar assim mesmo**). Para tirar o aviso, assine `Instalar-*.exe` e o `.exe` do programa com um certificado de assinatura de código (por exemplo, Azure Trusted Signing) antes de publicar.
 
-Na distribuição portátil, os arquivos ficam em **dados-locais**, ao lado de **app** e **runtime**. Faça backup dessa pasta. Para atualizar, encerre o programa e extraia a nova versão na mesma pasta, preservando **dados-locais**. Abrir o mesmo pacote novamente reabre a sessão existente; instalações diferentes usam seus próprios dados e portas locais.
+## Baixar e usar no Mac
 
-## Executar a partir do código (desenvolvimento)
+1. Baixe **CoverBatch-Studio-macOS.zip** na [página de releases](https://github.com/ZIRTUNO/coverbatch-studio/releases/latest) e dê dois cliques nele.
+2. Arraste o **CoverBatch Studio** para o atalho **Aplicativos** que vem ao lado.
+3. Abra pela pasta Aplicativos. Na primeira vez o Mac pede uma confirmação, porque o app não é assinado pela Apple: no macOS 15 ou mais novo, em **Ajustes do Sistema > Privacidade e Segurança > Abrir Mesmo Assim**; do macOS 11 ao 14, com **clique direito > Abrir**.
 
-1. Instale **Node.js 24 (64 bits)** do [site oficial](https://nodejs.org/). Confira `node --version`: deve começar com `v24`.
-2. Extraia o código para uma pasta sua. Abra o PowerShell nessa pasta.
-3. Execute:
+Um único app para chip Apple e Intel, macOS 11 (Big Sur) ou mais novo; traz o Node.js 22 LTS para os dois processadores. A interface abre numa janela própria do Google Chrome ou do Microsoft Edge, se houver um deles; senão, no Safari. Os dados ficam em `~/Library/Application Support/CoverBatch Studio`. Atualizar é arrastar a versão nova para Aplicativos e escolher Substituir; remover é arrastar o app para o Lixo.
+
+Para tirar a confirmação da primeira abertura, o app precisa de uma conta Apple Developer: assinar com Developer ID e notarizar (`codesign` + `notarytool`, num Mac).
+
+Cada pacote, de Windows e de Mac, traz **Como instalar.html**: o passo a passo com desenhos das telas de cada sistema. Uma cópia avulsa sai em `outputs/` para enviar junto com o link de download. O texto para o dia a dia está em [packaging/LEIA-ME.txt](packaging/LEIA-ME.txt) (Windows) e [packaging/LEIA-ME-macOS.txt](packaging/LEIA-ME-macOS.txt).
+
+## Como funciona
+
+1. **Solte as capas** em qualquer lugar da janela: um ZIP, uma pasta (com subpastas) ou várias imagens. Também dá para colar uma imagem com Ctrl+V (Cmd+V no Mac). JPEG, PNG, WebP, AVIF, GIF e TIFF são aceitos; o resto é ignorado e listado.
+2. **As capas são carimbadas na hora**, uma a uma, e aparecem na tela conforme ficam prontas.
+3. **Baixe o ZIP** ou **abra a pasta** com as imagens prontas, já com nomes limpos (`ea-sports-fc-27-ps4.jpg`), prontas para enviar ao produto.
+
+A plataforma vem do nome:
+
+| Onde aparece | Exemplo | Resultado |
+| --- | --- | --- |
+| Nome do arquivo | `FC 27 (PS4).png`, `gta-ps4-ps5.jpg` | PS4; PS4 e PS5 |
+| Pasta | `PS5/god-of-war.jpg` | PS5 |
+| Nome do ZIP | `capas-ps5.zip` | PS5 para as capas sem indicação |
+| Nenhum | `corrida.jpg` | padrão do kit (PS4), com aviso e troca em um clique |
+
+Na tela do lote, cada capa tem os botões PS4/PS5 para ligar ou desligar aquela imagem, e o lote inteiro pode ser trocado de uma vez: plataforma e frase (padrão do kit, Envio imediato, Acesso imediato ou Pré-venda). Clicar numa capa abre a comparação antes/depois em tamanho real, com a escolha de frase só para ela. **Desfazer escolhas** (no lote) e **Desfazer ajustes desta capa** voltam ao automático.
+
+O programa avisa quando uma capa **parece já ter o selo** (PS4 ou PS5, comparando com o próprio desenho do selo, mesmo deslocado ou reduzido), quando a **resolução é baixa** e quando um arquivo **não abre**. Uma falha nunca interrompe o lote.
+
+O botão **Ajuda** (ou a tecla `?`) explica cada função com os termos do sistema em uso (Finder ou Explorador, Cmd ou Ctrl) e abre a pasta dos dados. Na primeira visita, a tela inicial mostra os três passos.
+
+## Kit da loja
+
+Tudo o que a loja define uma vez fica no **Kit da loja** (botão no topo):
+
+- **Logo**: PNG ou SVG com fundo transparente. A área transparente em volta é ignorada, então a posição é medida no que aparece. Ela é dimensionada pela área, com a logo da referência como medida: uma logo larga ou quadrada ganha o mesmo peso visual. Em capas claras ganha uma sombra suave, para a logo branca não sumir (pode ser desligada). O painel mostra a logo numa capa escura e numa clara, desenhadas pelo próprio compositor.
+- **Selo**: os logotipos oficiais PS4 e PS5 em vetor e o texto em Open Sans convertido em curvas, nítido em qualquer tamanho de capa. PS4: bloco azul e pílula branca; PS5: bloco branco e pílula preta. Três frases editáveis (envio imediato, acesso imediato, pré-venda), cores próprias por parte (bloco, logotipo, fundo, texto) com volta às oficiais, ou uma imagem própria (PNG) no lugar do desenho. O catálogo mostra os seis selos.
+- **Posição e tamanho**: medidas da capa de referência 1200 × 1500 (selo de 655 × 96 a 70 px da esquerda e 55 px de baixo; logo a 39 px da direita, centralizada na altura do selo). Em capas de outros tamanhos e proporções, o tamanho segue a raiz da área da capa, com limites para nada sair da imagem nem encostar um no outro.
+- **Imagens finais**: a frase padrão de cada plataforma, a plataforma padrão para nomes sem PS4/PS5, JPEG (qualidade 92, cores 4:4:4) ou PNG, tamanho original ou 1200 × 1500 com recorte inteligente.
+- **Restaurar**: cada parte alterada ganha **Restaurar original**, e **Restaurar tudo** volta ao kit que veio instalado (o do perfil privado, ou o de fábrica). Logo depois de restaurar, **Desfazer** traz as alterações de volta.
+- **Exportar/importar kit**: leva logo, selos e medidas para outro computador. O ZIP contém a marca da loja: compartilhe só com quem vai usar.
+
+Mudou o kit depois de carimbar? O lote avisa e oferece **Aplicar o kit atual**.
+
+## Edição privada (perfil da loja)
+
+Um perfil privado deixa o kit pronto na primeira abertura. A pasta contém:
+
+- `profile.json`: `{ "version": 1, "id": "...", "title": "...", "developer": "ZIRTUNO" }`
+- `kit.zip`: exportado pelo próprio programa em **Kit da loja → Exportar kit** (o `templates.zip` da versão 0.x também é aceito e convertido)
+- `developer-logo.svg` (opcional)
+
+Gere os pacotes com `npm run package:windows -- --profile-dir perfil` e `npm run package:macos -- --profile-dir perfil`: saem `Instalar-Criador-de-capas-Kabban-PRIVADO.exe`, `Criador-de-capas-Kabban-macOS-PRIVADO.zip` e os ZIPs equivalentes. O kit é instalado uma única vez por `id` de perfil, e esse kit vira o "original" dos botões de restaurar; atualizações preservam os ajustes do cliente. A pasta `perfil/` é ignorada pelo Git. Nunca publique o perfil nem os pacotes privados.
+
+## Desenvolvimento
+
+Requer Node.js 22 ou mais recente (o pacote do Windows leva o 24; o do Mac, o 22, que ainda roda no macOS 11).
 
 ```powershell
 npm ci
 npm start
 ```
 
-Abra **http://127.0.0.1:4317**. Para as próximas execuções, use `iniciar.cmd` ou `npm start`. Encerre com Ctrl+C. Se a porta estiver ocupada:
-
-```powershell
-$env:PORT = '4318'
-npm start
-```
-
-O lançador abre o navegador após o servidor ficar pronto. Se a porta estiver ocupada, tenta outras portas locais. A instalação do código baixa dependências do npm; depois disso o processamento funciona sem internet.
-
-## Fluxo
-
-1. **Importar:** escolha/arraste um ZIP, várias capas ou um catálogo JSON/CSV junto das imagens. Para adicionar imagens a um catálogo já importado, importe os arquivos depois. Os originais são copiados, nunca alterados.
-2. **Carregar PNGs:** forneça a faixa, a logo e outras camadas originais, preferencialmente com fundo transparente. PNGs inteiramente opacos são recusados por padrão. Para usar um PNG com fundo, ative **Aceitar PNG opaco mantendo o fundo** antes do upload: o fundo será preservado integralmente, com aviso na prévia e na exportação. Nenhum fundo é removido ou redesenhado. Screenshots de referência não viram adesivos.
-3. **Configurar:** crie um modelo com ＋. Defina nome, plataforma e disponibilidade; adicione ao menos duas camadas. Escolha âncora, largura proporcional, margens e opacidade. A ordem de cima para baixo define a composição; a última camada fica sobre as anteriores. Duplique modelos para outros PNGs/plataformas.
-4. **Aplicar:** selecione produtos e confirme a disponibilidade. Aplique aos selecionados compatíveis, a todos da plataforma ou ao produto atual. Produtos de outra plataforma são ignorados. O conteúdo escrito no PNG não é interpretado: escolha a faixa correta para o modelo.
-5. **Revisar:** clique em cada produto; compare original e resultado e use o zoom. Em **Só este produto**, troque/aprove a base, confirme a disponibilidade ou ajuste enquadramento e camadas individualmente. Marque **Conferi esta prévia e posso exportar**. Qualquer mudança na base, composição ou modelo exige nova revisão.
-6. **Exportar:** escolha JPEG (qualidade 85–100, padrão 94) ou PNG sem perdas. O limite em KB é opcional. O JPEG pode reduzir até a qualidade mínima configurada; dimensões não são reduzidas silenciosamente para atingir o limite. Itens inviáveis ficam pendentes. Baixe uma imagem ou o ZIP. Corrija falhas e use **Repetir apenas falhas e pendentes** para gerar um novo ZIP contendo só esses itens.
-
-Na importação, a referência visual indica a faixa no canto inferior esquerdo e a logo no inferior direito. Há áreas independentes para arrastar capas/ZIP, faixa e logo. Uma foto avulsa oferece um atalho para escolher plataforma, confirmar disponibilidade e revisar com o modelo pronto. Um ZIP sem catálogo funciona como um conjunto de imagens avulsas. O botão **Baixar esta imagem** oferece JPEG e PNG, sem precisar exportar o lote.
-
-O ZIP contém `slug--ID.jpg`/`.png`, `export-manifest.csv`, `export-manifest.json` e orientações. Nomes repetidos recebem sufixos sem sobrescrever arquivos. O índice preserva ID, slug, plataforma, modelo, disponibilidade, origem e hash da base, dimensões, qualidade e hash do resultado. Ele não é um arquivo de importação de catálogo.
-
-**Extraia o ZIP e envie as imagens aos produtos indicados. Uma loja não deve ser presumida capaz de receber o ZIP e distribuir imagens automaticamente.**
-
-## Proporção e resolução
-
-O padrão preserva a proporção e resolução da base. 4:5, 3:4, quadrado e dimensões personalizadas são escolhas explícitas. **Arte inteira + preenchimento** mantém a arte sem esticar, com a cor escolhida visível na prévia. **Recorte explícito** oferece foco horizontal/vertical e exige confirmação individual. A base não é ampliada; recortes com dimensões maiores que o conteúdo disponível ficam pendentes. Um quadro maior com preenchimento pode conter a arte no tamanho nativo. Não há promessa de ganho de qualidade.
-
-Prévia e exportação passam pelo mesmo compositor e encoder. A prévia informa as dimensões reais da saída, tamanho codificado e qualidade. JPEG achata transparência na cor escolhida; PNG preserva a transparência da composição quando a base/quadro a contiver. Opacidade multiplica o canal alpha do PNG. Um PNG opaco mantém seu fundo. O acabamento opcional pode ignorar uma margem superior do PNG e arredondar seus cantos somente na composição. Os originais permanecem intactos; não há remoção automática de fundo ou redesenho. Essas opções acompanham os modelos portáteis.
-
-## Pacote reconhecido
-
-```text
-catalogo.json (ou catalogo.csv)
-capas-limpas-manifesto.json
-capas-limpas-da-previa/
-fotos-publicadas/
-referencias/
-```
-
-O manifesto associa `arquivo`, `produtos_slugs`, `origem` e `sha256`. Havendo associação e hash correto, a capa da prévia é preferida. Essas capas são **prévia local**, não fotos publicadas. Um arquivo pode atender mais de um produto. Divergências de hash geram aviso e impedem a aprovação automática. Nenhum produto sem imagem recebe arte inventada ou atribuída por semelhança de nome.
-
-Fotos em `fotos-publicadas/` aguardam aprovação individual, pois podem já ter textos e logotipos incorporados. Antes da aprovação, a prévia mostra apenas o original. `referencias/` fica fora dos produtos. Arquivos de orientação são dados, nunca comandos executados pela ferramenta.
-
-Catálogo JSON mínimo:
-
-```json
-[
-  { "id": "101", "slug": "jogo-demo-ps4", "nome": "Jogo demo PS4", "plataforma": "PS4", "imagens": [{ "arquivo": "fotos-publicadas/jogo-demo-ps4/01.jpg" }] },
-  { "id": "102", "slug": "jogo-demo-ps5", "nome": "Jogo demo PS5", "plataforma": "PS5", "imagens": [] }
-]
-```
-
-CSV aceita delimitador `;` ou `,`, cabeçalhos `id` (ou `id_produto`), `slug`, `nome`, `plataforma` e `arquivo` (ou `foto_principal_publicada`). Para capas da prévia, importe também o manifesto; `capa_limpa_previa` isolado não substitui a associação validada no manifesto. Imagens soltas recebem ID local único. Em **Identificação do produto**, defina o ID/slug/plataforma reais. A mesma imagem solta pode ser escolhida como base de produtos diferentes já presentes no catálogo.
-
-## Dados privados e portabilidade
-
-Na execução pelo código, tudo é salvo em **`.local-data/`**; no pacote portátil, em **dados-locais**: originais copiados por hash, catálogo, modelos, preferências e exportações. Faça backup dessa pasta para preservar o projeto completo. Não a adicione ao Git. `work/`, `outputs/`, `.local-data/`, `dados-locais/`, imagens e ZIPs são ignorados pelo versionamento. O repositório deve conter apenas código, documentação e testes sintéticos.
-
-**Exportar modelos** gera um ZIP com `templates.json` e os próprios PNGs referenciados. **Importar modelos** restaura as camadas em outro computador, sem depender de caminhos desta máquina. Esse ZIP pode conter marcas privadas; compartilhe-o apenas com quem você autorizar.
-
-O servidor escuta exclusivamente `127.0.0.1`, bloqueia origens externas e não usa fontes, imagens, telemetria, APIs ou serviços de processamento remotos. Não hospeda arquivos nem cria URLs públicas. Não integra catálogo, estoque, preços ou painel de lojas. Limites locais: 600 MB por upload, ZIP de até 2 GB descompactados/12 mil entradas, 100 MB por entrada, base de até 40 MP e saída de até 16 MP.
-
-## Verificação
+Abre em http://127.0.0.1:4317 (ou na próxima porta livre). Opções do lançador: `--data <pasta>`, `--profile <pasta>`, `--port <n>`, `--no-browser`.
 
 ```powershell
 npm test
-npm run validate:real -- "C:\caminho\pacote.zip"
+npm run validate:real -- "C:\caminho\capas.zip" --logo "C:\caminho\logo.png"
+npm run package:windows
+npm run verify:windows
+npm run package:macos
+npm run verify:macos
 ```
 
-Os testes sintéticos cobrem pixels de transparência/opacidade/margem, proporção, recorte, bloqueio de ampliação, nomes repetidos, IDs, associação compartilhada em PS4/PS5, arquivo inválido, isolamento de falhas, repetição de um item, ZIP e modelos portáteis. O validador real é específico para o pacote de 696 produtos desta primeira entrega: testa os 195 produtos com capa da prévia e gera uma amostra de oito produtos, com **adesivos de TESTE**. O conjunto da prévia tem apenas 600×800; duas cópias reduzidas para 450×600 e 300×400 exercitam bases de dimensões diferentes. As fotos publicadas permanecem sem adesivos até aprovação. Resultados privados ficam em `outputs/` e não devem ser publicados.
+`validate:real` processa capas reais com o mesmo motor, confere que os originais ficaram intactos e que cada selo está dentro da capa, e grava uma folha de contato e um relatório em `outputs/` (sem `--logo`, usa uma logo marcada TESTE).
+
+`package:windows` baixa o runtime oficial do Node fixado por versão e SHA-256 em `packaging/windows.json` e gera o ZIP portátil e o instalador. O `.exe` do programa e o instalador (fontes em `packaging/windows/`, C# 5) são compilados com o `csc.exe` que já vem no Windows (.NET Framework 4.8): sem SDK nem dependência nova. O `.exe` inicia o motor sem console, abre a interface numa janela própria do Edge (modo app, perfil separado) e o programa se encerra alguns segundos depois que a última janela fecha.
+
+`verify:windows` testa o pacote como o cliente usa, numa pasta nova e só com o runtime incluído: o `.exe` portátil (incluindo a segunda abertura), a instalação silenciosa, o programa instalado carimbando duas capas com os selos oficiais e a desinstalação. Com `-- --com-registro`, confere também os atalhos e a entrada em Configurações > Aplicativos (criados e removidos durante o teste).
+
+`package:macos` roda em qualquer sistema (inclusive Windows) e monta um `.app` universal: os Node.js oficiais para Apple silicon e Intel (fixados por SHA-256 em `packaging/macos.json`), o Sharp e a libvips de cada processador, `Info.plist`, ícone `.icns` e o lançador `packaging/macos/launcher.sh`. O ZIP guarda as permissões Unix e um link para Aplicativos. O lançador escolhe o runtime do processador, tira a quarentena dos próprios arquivos depois que a pessoa autorizou o app, pede para mover o app quando ele roda translocado (aberto direto de Downloads), inicia o motor numa sessão própria e abre a janela.
+
+`verify:macos` confere o ZIP sem um Mac: permissões, link para Aplicativos, binários Mach-O de cada processador, `Info.plist`, `.icns`, perfil. Depois roda o lançador de verdade no Git Bash, com substitutos para `open`, `sysctl`, `xattr` e `osascript`, contra o motor deste código: primeira abertura, segunda abertura reaproveitando o motor (janela do Chrome), encerramento depois que a janela fecha, app translocado e runtime ausente. Falta só a confirmação do Gatekeeper e a janela num Mac de verdade.
 
 ## Estrutura
 
-`server.js`: API local e persistência. `lib/importer.js`: associação de arquivos e catálogo. `lib/render.js`: composição determinística, qualidade, nomes e lote. `lib/zip.js`: leitura limitada sem extrair caminhos do usuário. `public/`: interface sem compilação ou serviços externos. `test/`: testes Node. `package-lock.json`: versões reproduzíveis das dependências.
+- `server.js`: API local e segurança.
+- `lib/sticker.js`: selo vetorial com os logotipos oficiais (`assets/marks`) e o texto em curvas via opentype.js (fontes em `assets/fonts`).
+- `lib/layout.js`: geometria para qualquer tamanho de capa; logo dimensionada pela área.
+- `lib/compose.js`: compositor único de prévias, miniaturas, amostras da logo e arquivos finais.
+- `lib/detect.js`: plataforma pelo nome e detecção de selo PS4 ou PS5 já aplicado.
+- `lib/batch.js`: lotes (leitura de ZIP/pastas, fila, nomes, frases por plataforma, ZIP final).
+- `lib/kit.js`, `lib/profile.js`: kit da loja, original para restaurar, migração da v0.x e perfil privado.
+- `public/`: interface sem etapa de build; fonte Archivo local. `public/js/help.js` é a ajuda.
+- `scripts/package-*.js`, `scripts/macos-app.js`, `scripts/windows-exe.js`: pacotes de Windows e Mac. `packaging/`: lançadores, guias e `como-instalar.html`.
+- `assets/icon*.svg`: ícone (Windows e web; `icon-macos*.svg` no grid da Apple; `*-small` abaixo de 48 px).
 
-Limites da primeira versão: uma saída por produto, edição por controles numéricos e âncoras, sem editor gráfico completo. A confirmação de revisão é feita por produto. Não há detecção automática dos textos presentes nas fotos nem reconhecimento do texto das faixas. A fidelidade da composição final depende dos PNGs originais fornecidos pelo usuário.
+Os dados ficam em `.local-data/` (código), `dados-locais/` (pacote do Windows) ou `~/Library/Application Support/<nome>/dados` (Mac): `kit.json`, `kit/` (com `kit/original/`) e `batches/` (originais copiados, imagens prontas e miniaturas de cada lote). Faça backup dessa pasta; ela nunca vai para o Git.
 
-## Gerar a distribuição Windows
+## Privacidade e segurança
 
-Em Windows x64, com Node.js 24 e as dependências do projeto:
+O servidor escuta só em 127.0.0.1, recusa outros hosts e origens e exige um token de sessão para qualquer alteração. Não há fontes, scripts ou serviços remotos. Nomes vindos de ZIPs e pastas nunca viram caminhos no disco; SVGs com scripts ou arquivos externos são recusados. Os originais nunca são alterados.
 
-```powershell
-npm test
-npm run package:windows
-```
+## Atualizando de versões anteriores
 
-O empacotador baixa o runtime do site oficial do Node.js e exige o SHA-256 definido em `packaging/windows.json`. Instala dependências de produção em uma pasta limpa, inclui os binários nativos do Sharp e as licenças, testa o runtime e cria `outputs/CoverBatch-Studio-Windows-x64.zip` e seu checksum. Não copia `.local-data`, `dados-locais`, `work`, `outputs` ou arquivos da loja. O runtime é fixado por versão e hash para builds reproduzíveis; sua atualização deve ser revisada no arquivo de configuração.
+Da 1.0: as cores antigas viram os esquemas oficiais (o azul do PS4 é mantido; o PS5 passa ao selo oficial preto e branco) e os lotes antigos passam a seguir a frase padrão de cada plataforma.
 
-Para usar um arquivo já baixado e dependências já presentes no cache, acrescente `-- --node-zip "caminho\\node.zip" --offline`. O nome do asset de release permanece fixo para manter o botão de download válido entre versões.
-
-Um perfil privado opcional contém `profile.json` (version 1, id, title, developer e indicadores hasDeveloperLogo/hasReference), `templates.zip` exportado pela ferramenta, `developer-logo.svg` e `reference.jpg`. Use `-- --profile-dir "pasta-privada"` para gerar a edição privada em um ZIP separado. O empacotador copia somente esses quatro arquivos; não inclui catálogo, capas ou estado da sessão. A primeira abertura instala os modelos e suas camadas em `dados-locais`; as próximas preservam as edições do cliente. Nunca publique esse ZIP ou a pasta do perfil no repositório/release público.
+Da 0.x: na primeira abertura, a logo e as faixas dos modelos antigos viram o kit da loja. O selo vetorial passa a ser o padrão; as faixas antigas continuam disponíveis em **Kit da loja → Selo → Imagem própria**. O `project.json` antigo e seus arquivos não são apagados.

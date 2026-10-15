@@ -11,3 +11,4 @@ outputs/
 *.webp
 *.env
 .env*
+.claude/data/

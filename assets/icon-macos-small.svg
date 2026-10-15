@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- icon-macos.svg for 16 and 32 px (Finder lists): the sticker alone on Apple's grid. -->
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f86d2"/><stop offset="1" stop-color="#123f6b"/></linearGradient>
+    <clipPath id="pill"><rect x="182.4" y="388.4" width="659.2" height="247.2" rx="64.3"/></clipPath>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185.4" fill="url(#plate)"/>
+  <g clip-path="url(#pill)">
+    <rect x="182.4" y="388.4" width="659.2" height="247.2" fill="#fff"/>
+    <path d="M182.4 388.4h197.8l-52.6 247.2H182.4z" fill="#0f3459"/>
+  </g>
+</svg>
