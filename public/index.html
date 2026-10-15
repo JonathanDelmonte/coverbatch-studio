@@ -1,32 +1,54 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CoverBatch Studio</title><link rel="stylesheet" href="/styles.css"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criador de capas</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/app-icon.png" type="image/png" sizes="192x192">
+  <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
 <body>
-  <header class="topbar"><div class="brand"><b class="brandmark" aria-hidden="true">CB</b><div><strong id="appTitle">Criador de capas para loja virtual</strong><small class="developer"><img id="developerLogo" alt="Logo ZIRTUNO" hidden><span>desenvolvido por <b id="developerName">ZIRTUNO</b></span></small></div></div><div class="local">Local · privado</div><span id="saveStatus" role="status">Pronto</span><button id="exportModels" class="subtle">Exportar modelos</button><label class="button subtle">Importar modelos<input id="modelFiles" type="file" accept=".zip" hidden></label></header>
-  <nav aria-label="Etapas"><button data-page="import" class="active"><span>1</span> Importar</button><button data-page="edit"><span>2</span> Configurar e revisar</button><button data-page="export"><span>3</span> Exportar lote</button><div id="selectionCount">Nenhum produto selecionado</div></nav>
-  <main>
-    <section id="page-import" class="page">
-      <div class="intro"><div class="import-explanation"><p class="eyebrow">SEU MATERIAL, NO SEU COMPUTADOR</p><h1>Suas capas,<br>no padrão da loja.</h1><p>Arraste uma foto para testar ou um ZIP para preparar várias capas. Confira a prévia e baixe em JPEG, PNG ou ZIP.</p><div class="flow-caption"><span>Importar</span><i>→</i><span>Conferir</span><i>→</i><span>Baixar</span></div></div><figure class="composition-guide"><div class="guide-image"><img id="compositionReference" alt="Referência de posicionamento: faixa PlayStation no canto inferior esquerdo e logo Kabban no canto inferior direito" hidden><div id="compositionPlaceholder"><span>CAPA DO JOGO</span><div><b>PS4 / PS5</b><b>LOGO</b></div></div></div><figcaption><strong>Assim fica a composição</strong><div class="guide-labels"><span><b>1</b> Faixa · inferior esquerdo</span><span><b>2</b> Logo · inferior direito</span></div><small>Exemplo de posição e tamanho. A referência não entra no lote.</small></figcaption></figure></div>
-      <div class="import-material"><div class="section-heading"><div><p class="eyebrow">01 · CAPAS</p><h2>Adicione suas imagens</h2></div><span class="hint">Uma foto, várias fotos ou um ZIP</span></div><label id="dropzone" class="dropzone" tabindex="0" role="button"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 21V5m-6 6 6-6 6 6M5 21v6h22v-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><strong>Arraste suas capas ou seu ZIP para cá</strong><span>ou clique nesta área para escolher os arquivos</span><small>JPEG, PNG e WebP · ZIP de imagens · catálogo JSON/CSV opcional</small><input id="inputFiles" type="file" multiple accept=".zip,.jpg,.jpeg,.png,.webp,.json,.csv" hidden></label><progress id="importProgress" hidden></progress><p id="importStatus" role="status">Seus arquivos originais ficam intactos. Tudo é processado neste computador.</p><div id="quickSetup" class="quick-setup" hidden><div><strong id="quickSetupTitle">Capa importada</strong><small>Escolha a plataforma e confirme o texto da faixa para usar o modelo pronto.</small></div><label>Plataforma<select id="quickPlatform"><option>PS4</option><option>PS5</option><option value="both">PS4 + PS5</option></select></label><label><input id="quickAvailability" type="checkbox"> Confirmo envio imediato</label><button id="quickApply" class="primary">Usar padrão e conferir →</button></div></div>
-      <div id="importReport"></div>
-      <div class="import-overlays"><div class="section-heading"><div><p class="eyebrow">02 · ELEMENTOS DA COMPOSIÇÃO</p><h2>Faixa à esquerda. Logo à direita.</h2></div><span id="presetStatus" class="hint">Reutilize os mesmos PNGs em todas as capas.</span></div><div class="overlay-slots"><div class="overlay-slot"><div class="slot-heading"><span class="slot-number">1</span><div><h3>Faixa de plataforma</h3><small>Canto inferior esquerdo</small></div><label>Substituir faixa de<select id="bannerPlatform"><option>PS4</option><option>PS5</option></select></label></div><div id="bannerSamples" class="asset-samples"></div><label id="bannerDropzone" class="dropzone layer-drop" tabindex="0" role="button"><strong>Arraste o PNG da faixa aqui</strong><span>ou clique para substituir · PS4 ou PS5</span><input id="bannerFiles" type="file" accept=".png" hidden></label></div><div class="overlay-slot"><div class="slot-heading"><span class="slot-number">2</span><div><h3>Logo da loja</h3><small>Canto inferior direito · compartilhada nos modelos</small></div></div><div id="logoSamples" class="asset-samples"></div><label id="logoDropzone" class="dropzone layer-drop" tabindex="0" role="button"><strong>Arraste o PNG da logo aqui</strong><span>ou clique para substituir nos modelos PS4 e PS5</span><input id="logoFiles" type="file" accept=".png" hidden></label></div></div><p id="layerStatus" role="status">Carregue a faixa e a logo originais.</p><details class="advanced-import"><summary>Outras camadas e opções de PNG</summary><label><input id="allowOpaqueLayers" type="checkbox"> Aceitar PNG opaco mantendo o fundo</label><p class="hint">O fundo original é mantido. A ferramenta não remove cores nem redesenha logotipos.</p><label class="button subtle">Adicionar outros PNGs<input id="layerFilesImport" type="file" multiple accept=".png" hidden></label></details></div>
-      <details class="package-help"><summary>Como capas, catálogo e ZIP são relacionados</summary><p>O manifesto relaciona as capas da prévia aos produtos e sugere PS4 ou PS5. Fotos publicadas aguardam sua aprovação como base; referências ficam fora do lote. Se faltar a arte correta, o produto fica pendente.</p><p>Você também pode importar somente imagens. Na exportação, baixe uma imagem em JPEG/PNG ou um ZIP com o lote e o manifesto. Extraia o ZIP para enviar as imagens pelo painel da loja.</p></details>
-      <details id="referencesSection" hidden><summary>Referências visuais do pacote</summary><div id="references" class="references"></div></details>
-      <div class="next-row"><button class="primary" data-page="edit">Configurar e revisar capas →</button></div>
-    </section>
+  <header class="band">
+    <a class="band-brand" href="#/" aria-label="Início">
+      <span class="band-mark" aria-hidden="true"></span>
+      <img class="band-logo" id="bandLogo" alt="" hidden>
+      <span class="band-title" id="bandTitle">Criador de capas</span>
+    </a>
+    <div class="band-actions">
+      <button class="band-help" id="openHelp" type="button" aria-label="Ajuda" aria-keyshortcuts="?"><span>Ajuda</span></button>
+      <button class="band-kit" id="openKit" type="button">
+        <img id="bandSticker" alt="" hidden>
+        <span>Kit da loja</span>
+      </button>
+    </div>
+  </header>
 
-    <section id="page-edit" class="page" hidden>
-      <div class="workspace">
-        <aside class="library"><div class="panel-head"><h2>Produtos</h2><span id="productCount" class="count">0</span></div><input id="search" type="search" placeholder="Buscar nome, slug ou ID" aria-label="Buscar produto"><div class="filter-row"><select id="platformFilter" aria-label="Filtrar plataforma"><option value="">Todas as plataformas</option><option>PS4</option><option>PS5</option></select><select id="statusFilter" aria-label="Filtrar situação"><option value="">Todos</option><option value="base">Com base</option><option value="missing">Sem imagem</option><option value="selected">Selecionados</option><option value="pending">Pendentes</option><option value="ready">Prontos</option></select></div><div class="select-actions"><button id="selectVisible" class="subtle">Selecionar filtrados</button><button id="clearSelection" class="subtle">Limpar seleção</button></div><div id="products" class="product-list"></div><button id="moreProducts" hidden class="subtle">Mostrar mais</button><p class="hint">A seleção define o lote. Clique em um produto para conferir e ajustar.</p></aside>
-        <section class="preview-panel"><div class="panel-head"><div><p class="eyebrow" id="previewPlatform">PRÉVIA</p><h2 id="previewTitle">Selecione uma capa</h2></div><label class="compare"><input id="compare" type="checkbox"> Comparar</label></div><div class="preview-controls"><label>Zoom <input id="zoom" type="range" min="50" max="200" value="100"><output id="zoomValue">100%</output></label><button id="refreshPreview" class="subtle">Atualizar prévia</button></div><div id="previewStage" class="preview-stage"><div class="empty-preview" id="previewEmpty"><b>Sua próxima capa começa aqui</b><p>Importe o material e selecione um produto na lista.</p></div><figure id="originalFigure" hidden><figcaption>Original</figcaption><div class="image-scroll"><img id="originalImg" alt="Capa original"></div></figure><figure id="resultFigure" hidden><figcaption>Resultado</figcaption><div class="image-scroll"><img id="resultImg" alt="Prévia da composição"></div></figure></div><div id="previewInfo" class="preview-info" role="status"></div><div id="previewWarnings" class="notice" hidden></div><div id="reviewActions" class="review-actions" hidden><label><input id="reviewed" type="checkbox"> Conferi esta prévia e posso exportar</label><div class="single-download"><select id="singleFormat" aria-label="Formato desta imagem"><option value="jpeg">JPEG · alta qualidade</option><option value="png">PNG · sem perdas</option></select><button id="exportOne" class="primary">Baixar esta imagem</button></div></div></section>
-        <aside class="inspector"><div class="inspector-tabs"><button id="tabModel" class="active">Modelo reutilizável</button><button id="tabIndividual">Só este produto</button></div>
-          <div id="modelEditor"><div class="model-picker"><select id="templateSelect" aria-label="Escolher modelo"><option value="">Escolha um modelo</option></select><button id="newTemplate" title="Criar modelo">＋</button><button id="cloneTemplate" title="Duplicar modelo">Duplicar</button></div><div id="modelFields" hidden><label>Nome do modelo<input id="templateName" type="text"></label><div class="form-row"><label>Plataforma<select id="templatePlatform"><option>PS5</option><option>PS4</option><option>PC</option><option>Xbox</option><option>Outra</option></select></label><label>Disponibilidade<select id="templateAvailability"><option value="">Escolha</option><option value="immediate">Envio imediato</option><option value="preorder">Pré-venda</option><option value="other">Outra</option></select></label></div><p class="hint">A faixa deve corresponder à plataforma e à disponibilidade. O texto do PNG original é preservado.</p><div class="model-defaults"><h3>Faixa e logo</h3><button id="restorePreset" class="subtle" hidden>Restaurar padrão</button></div><div id="presetGeometry" class="hint"></div><div id="layers"></div><div class="form-row"><select id="assetSelect" aria-label="Escolher PNG"></select><button id="addLayer">Adicionar</button></div><label><input id="allowOpaqueLayersModel" type="checkbox"> Aceitar PNG opaco mantendo o fundo</label><label class="button subtle full">Carregar mais PNGs<input id="layerFiles" type="file" multiple accept=".png" hidden></label><h3>Formato do quadro</h3><div id="modelFrame"></div><div class="apply-box"><label><input id="confirmAvailability" type="checkbox"> Confirmo a disponibilidade para os produtos aos quais aplicarei este modelo</label><select id="applyGroup" aria-label="Grupo de aplicação"><option value="selected">Itens selecionados compatíveis</option><option value="platform">Todos da plataforma deste modelo</option><option value="current">Somente produto em revisão</option></select><button id="applyTemplate" class="primary full">Aplicar modelo</button></div><button id="deleteTemplate" class="danger subtle">Excluir modelo</button></div><div id="modelEmpty" class="empty-small"><h3>Monte seu primeiro modelo</h3><p>Carregue os PNGs originais e use ＋ para criar um modelo. Nada é aplicado automaticamente.</p></div></div>
-          <div id="individualEditor" hidden><p class="hint">Alterações aqui afetam apenas o produto em revisão.</p><div id="individualFields"></div></div>
-        </aside>
-      </div>
-    </section>
+  <main id="view" tabindex="-1"></main>
 
-    <section id="page-export" class="page" hidden><div class="export-layout"><div class="export-config"><p class="eyebrow">ARQUIVOS PRONTOS PARA EXTRAIR</p><h1>Revise. Exporte.<br>Envie à sua loja.</h1><p>Um arquivo por produto selecionado, com identificação no nome e associação no manifesto.</p><label>Formato<select id="format"><option value="jpeg">JPEG · alta qualidade</option><option value="png">PNG · sem perdas</option></select></label><div class="form-row"><label>Qualidade JPEG<input id="quality" type="number" min="85" max="100" value="94"></label><label>Qualidade mínima<input id="minQuality" type="number" min="85" max="100" value="85"></label></div><label>Limite por imagem (KB)<input id="maxKB" type="number" min="0" max="100000" value="0"><small>0 = sem limite. Abaixo da qualidade mínima, o item fica pendente.</small></label><div id="exportSummary" class="notice"></div><button id="exportBatch" class="primary full">Gerar ZIP dos selecionados</button><p class="hint">Extraia o ZIP e envie os arquivos dentro dos produtos correspondentes. O ZIP não distribui as fotos automaticamente na loja.</p></div><div class="export-results"><div class="panel-head"><h2>Resultado do lote</h2><a id="downloadZip" class="button primary" hidden>Baixar ZIP</a></div><progress id="exportProgress" max="100" value="0" hidden></progress><p id="exportStatus" role="status">O progresso e as falhas de cada item aparecerão aqui.</p><button id="retryFailed" hidden>Repetir apenas falhas e pendentes</button><div id="results"></div></div></div></section>
-  </main>
-  <div id="toast" role="status" hidden></div><script type="module" src="/app.js"></script>
-</body></html>
+  <footer class="foot">
+    <span>As capas são processadas neste computador e não saem dele.</span>
+    <span class="foot-dev" id="footDev"></span>
+  </footer>
+
+  <div class="veil" id="veil" hidden>
+    <div class="selo selo-giant is-filled" aria-hidden="true">
+      <span class="selo-block"><svg viewBox="0 0 48 48" class="selo-glyph"><path d="M24 7v25m-10-10 10 10 10-10M9 33v8h30v-8"/></svg></span>
+      <span class="selo-text"><span>Pode</span> <b>soltar</b></span>
+    </div>
+    <p class="veil-count" id="veilCount"></p>
+  </div>
+
+  <dialog class="inspector" id="inspector" aria-labelledby="inspectorTitle"></dialog>
+  <dialog class="sheet" id="kitSheet" aria-labelledby="kitTitle"></dialog>
+  <dialog class="sheet help" id="helpSheet" aria-labelledby="helpTitle"></dialog>
+  <dialog class="confirm" id="confirm"></dialog>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <input id="pickFiles" type="file" multiple accept=".zip,.jpg,.jpeg,.jfif,.png,.webp,.avif,.gif,.tif,.tiff" hidden>
+  <input id="pickFolder" type="file" webkitdirectory multiple hidden>
+</body>
+</html>

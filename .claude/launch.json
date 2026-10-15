@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "coverbatch-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/launcher.js", "--no-browser", "--data", "work/dev-data", "--port", "4390"],
+      "port": 4390
+    }
+  ]
+}

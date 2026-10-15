@@ -1,82 +1,81 @@
 import path from 'node:path';
-import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat, copyFile, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
-import { Store, defaultFrame, defaults, hash } from '../lib/store.js';
-import { importFiles, exportTemplates } from '../lib/importer.js';
-import { compose, runJob, newJob } from '../lib/render.js';
-import { readZip } from '../lib/zip.js';
+import { Kit } from '../lib/kit.js';
+import { Batches } from '../lib/batch.js';
+import { seedProfile } from '../lib/profile.js';
+import { sha256 } from '../lib/files.js';
 
-const input = process.argv[2];
-if (!input) throw new Error('Uso: npm run validate:real -- "C:\\caminho\\pacote.zip"');
-const folder = path.resolve('work/private/validation');
-const out = path.resolve('outputs'); await mkdir(out, { recursive: true });
-const store = await new Store(folder).init();
-// Rebuild only this scratch validation state, making repeated checks reproducible.
-store.state = defaults();
-const report = await importFiles(store, [{ name: 'pacote.zip', path: path.resolve(input) }]);
-console.log(JSON.stringify(report, null, 2));
-assert.equal(report.totalProducts, 696); assert.equal(report.previewAssets, 152); assert.equal(report.withPreview, 195);
-assert.equal(report.withoutPreview, 501); assert.equal(report.withoutImage, 258); assert.equal(report.errors.length, 0);
-const eligible = store.state.products.filter(p => store.state.assets.find(a => a.id === p.baseId)?.kind === 'preview');
-assert.equal(eligible.length, 195);
-const inputHashes = new Map(eligible.map(p => [p.baseId, store.asset(p.baseId).sha256]));
-const logoBytes = await sharp(Buffer.from('<svg width="120" height="80"><rect x="3" y="3" width="114" height="74" rx="8" fill="#ffffff" stroke="#148fbd" stroke-width="6"/><text x="60" y="46" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#12536b">TESTE</text></svg>')).png().toBuffer();
-const logo = await store.addAsset(logoBytes, 'TESTE-logo-nao-final.png', 'layer');
-await writeFile(path.join(out, 'TESTE-logo-nao-final.png'), logoBytes);
-const templates = [];
-for (const platform of ['PS4', 'PS5']) {
-  const bytes = await sharp(Buffer.from(`<svg width="480" height="70"><rect x="2" y="2" width="476" height="66" rx="9" fill="#12536b"/><text x="240" y="30" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="bold" fill="white">${platform} · ADESIVO DE TESTE</text><text x="240" y="53" text-anchor="middle" font-family="sans-serif" font-size="17" fill="white">NÃO USAR NA LOJA</text></svg>`)).png().toBuffer();
-  const a = await store.addAsset(bytes, `TESTE-faixa-${platform}-nao-final.png`, 'layer');
-  await writeFile(path.join(out, `TESTE-faixa-${platform}-nao-final.png`), bytes);
-  templates.push({ id: `validation-${platform}`, name: `TESTE ${platform} — não usar na loja`, platform, availability: 'other', frame: defaultFrame(), layers: [{ assetId: a.id, anchor: 'bottom-left', width: .65, marginX: .035, marginY: .03, opacity: 1 }, { assetId: logo.id, anchor: 'bottom-right', width: .17, marginX: .035, marginY: .03, opacity: .9 }] });
-}
-store.state.templates = templates;
-for (const p of eligible) Object.assign(p, { templateId: `validation-${p.platform}`, availability: 'other', reviewed: true, selected: false, override: {} });
-const pair = eligible.filter(p => /ea-sports-fc-26/.test(p.slug));
-assert.equal(pair.length, 2); assert.deepEqual(new Set(pair.map(p => p.platform)), new Set(['PS4', 'PS5'])); assert.equal(pair[0].baseId, pair[1].baseId);
-const sample = [...pair, ...eligible.filter(p => !pair.includes(p)).slice(0, 6)];
-// The real preview set has a single native size (600×800). Use smaller copies of
-// two correctly associated covers to exercise heterogeneous native dimensions.
-const reductions = [];
-for (const [p, width] of [[sample[2], 450], [sample[3], 300]]) {
-  const source = store.asset(p.baseId);
-  const bytes = await sharp(store.assetPath(source.id)).resize({ width, withoutEnlargement: true }).jpeg({ quality: 98 }).toBuffer();
-  const derived = await store.addAsset(bytes, `TESTE-reduzida-${p.slug}.jpg`, 'manual', `Cópia de teste reduzida de ${source.name}`);
-  reductions.push({ id: p.id, original: source.name, original_sha256: source.sha256, original_dimensions: [source.width, source.height], test_dimensions: [derived.width, derived.height] });
-  p.baseId = derived.id;
-}
-const batch = await runJob(store, newJob(), eligible.map(p => p.key), { format: 'jpeg', quality: 94, minQuality: 85, maxKB: 0 });
-assert.equal(batch.results.filter(r => r.status === 'ok').length, 195);
-async function verify(job) {
-  let manifest; const names = new Set(), hashes = new Map();
-  await readZip(path.join(folder, 'jobs', job.id, 'lote.zip'), async (name, bytes) => {
-    assert.ok(!names.has(name.toLowerCase())); names.add(name.toLowerCase());
-    if (name === 'export-manifest.json') manifest = JSON.parse(bytes);
-    if (/\.jpg$/.test(name)) { const m = await sharp(bytes).metadata(); await sharp(bytes).raw().toBuffer(); hashes.set(name, { sha256: hash(bytes), width: m.width, height: m.height }); }
-  });
-  for (const row of manifest.produtos) {
-    const actual = hashes.get(row.arquivo); assert.equal(actual.sha256, row.sha256); assert.equal(actual.width, row.largura); assert.equal(actual.height, row.altura);
-    assert.ok(row.arquivo.includes(`--${row.id}`)); assert.ok(row.modelo.includes(row.plataforma));
-    for (const l of row.camadas) assert.ok(l.left >= 0 && l.top >= 0 && l.left + l.width <= row.largura && l.top + l.height <= row.altura);
+// Runs the real pipeline on a client's covers and writes a contact sheet for a
+// visual check. Results are private: they stay in work/ and outputs/.
+//   npm run validate:real -- <zip-ou-pasta> [--logo logo.png|svg] [--profile pasta-do-perfil]
+const args = process.argv.slice(2);
+const flag = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
+const input = args.find((a, i) => !a.startsWith('--') && !['--logo', '--profile'].includes(args[i - 1]));
+if (!input) throw new Error('Uso: npm run validate:real -- "C:\\caminho\\capas.zip" [--logo logo.png] [--profile pasta]');
+const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+const data = path.resolve('work/private', `validacao-${stamp}`);
+const out = path.resolve('outputs', `validacao-${stamp}`);
+await mkdir(out, { recursive: true });
+
+const kit = await new Kit(data).load();
+let logoSource = 'TESTE (sintética)';
+if (flag('--profile')) { await seedProfile(data, kit, flag('--profile')); logoSource = 'perfil privado'; }
+else if (flag('--logo')) { await kit.setLogo(await readFile(path.resolve(flag('--logo'))), path.basename(flag('--logo'))); logoSource = path.basename(flag('--logo')); }
+else await kit.setLogo(await sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="330" height="110"><text x="165" y="76" font-family="Arial" font-weight="700" font-size="60" letter-spacing="8" text-anchor="middle" fill="#fff">TESTE</text></svg>')).png().toBuffer(), 'TESTE.png');
+
+const files = [];
+const source = path.resolve(input);
+if ((await stat(source)).isDirectory()) {
+  const walk = async (dir, prefix) => { for (const e of await readdir(dir, { withFileTypes: true })) { if (e.isDirectory()) await walk(path.join(dir, e.name), `${prefix}${e.name}/`); else files.push({ path: path.join(dir, e.name), name: `${prefix}${e.name}` }); } };
+  await walk(source, '');
+} else files.push({ path: source, name: path.basename(source) });
+// The batch removes uploaded temp files after reading them: give it copies.
+await mkdir(path.join(data, 'entrada'), { recursive: true });
+const copies = [];
+for (const [i, f] of files.entries()) { const copy = path.join(data, 'entrada', `${i}`); await copyFile(f.path, copy); copies.push({ path: copy, name: f.name }); }
+
+const started = Date.now();
+const batches = await new Batches(data, kit).init();
+const created = await batches.create({ files: copies, title: path.basename(source) });
+let batch;
+for (;;) { batch = batches.get(created.id); if (batches.idle(batch)) break; await new Promise(r => setTimeout(r, 100)); }
+const seconds = (Date.now() - started) / 1000;
+await batches.flush();
+
+// Invariants: originals intact, every file decodes at the reported size, stamps inside the cover.
+for (const item of batch.items) {
+  assert.equal(sha256(await readFile(batches.pathOf(batch, 'in', item.file))), item.sha256, `original alterado: ${item.source}`);
+  for (const o of item.outputs ?? []) {
+    const bytes = await readFile(batches.pathOf(batch, 'out', o.name));
+    const meta = await sharp(bytes).metadata(); await sharp(bytes).raw().toBuffer();
+    assert.deepEqual([meta.width, meta.height], [o.width, o.height]);
+    for (const box of [o.geometry.sticker, o.geometry.logo].filter(Boolean)) assert.ok(box.left >= 0 && box.top >= 0 && box.left + box.width <= o.width && box.top + box.height <= o.height, `fora da capa: ${o.name}`);
   }
-  return manifest;
 }
-await verify(batch);
-const small = await runJob(store, newJob(), sample.map(p => p.key), { format: 'jpeg', quality: 94, minQuality: 85, maxKB: 0 });
-const manifest = await verify(small);
-assert.equal(manifest.produtos.length, 8);
-assert.notEqual(manifest.produtos[0].sha256, manifest.produtos[1].sha256);
-for (const [id, sha256] of inputHashes) assert.equal(hash(await readFile(store.assetPath(id))), sha256);
-await copyFile(path.join(folder, 'jobs', small.id, 'lote.zip'), path.join(out, 'amostra-privada-TESTE-8-produtos.zip'));
-await copyFile(path.join(folder, 'jobs', batch.id, 'lote.zip'), path.join(out, 'lote-privado-TESTE-195-produtos.zip'));
-await exportTemplates(store, path.join(out, 'modelos-TESTE-nao-finais.zip'));
-await copyFile(path.join(folder, 'jobs', small.id, small.results[0].file), path.join(out, 'amostra-visual-TESTE.jpg'));
-// Verify unapproved published photos remain uncomposed, including their native dimensions.
-const published = store.state.products.filter(p => store.state.assets.find(a => a.id === p.baseId)?.kind === 'published').slice(0, 3);
-const publishedChecks = [];
-for (const p of published) { const r = await compose(store, p); assert.equal(r.geometry.length, 0); publishedChecks.push({ id: p.id, dimensions: [r.width, r.height], no_overlays: true }); }
-const result = { validation_date: new Date().toISOString(), node: process.versions.node, sharp: sharp.versions.sharp, import: report, full_batch: { products: batch.total, ok: batch.results.filter(r => r.status === 'ok').length, failures: batch.results.filter(r => r.status !== 'ok') }, sample: manifest, shared_art_ps4_ps5: pair.map(p => ({ id: p.id, slug: p.slug, platform: p.platform, base_sha256: store.asset(p.baseId).sha256 })), heterogeneous_dimensions: reductions, published_unapproved_checks: publishedChecks, originals_unchanged: inputHashes.size, warning: 'Todos os adesivos são TESTE. Não são a logo nem a faixa finais da loja.' };
-await writeFile(path.join(out, 'validacao-privada.json'), JSON.stringify(result, null, 2));
-await store.save();
-console.log(`VALIDAÇÃO OK: ${batch.total} produtos, 8 na amostra, ${inputHashes.size} originais intactos. Saída: outputs/`);
+
+// Contact sheet: every output, labelled, in a grid.
+const outputs = batch.items.flatMap(i => (i.outputs ?? []).map(o => ({ ...o, flags: i.flags })));
+const tile = 240, label = 40, cols = 6, rows = Math.max(1, Math.ceil(outputs.length / cols));
+const composites = [];
+for (const [i, o] of outputs.entries()) {
+  const thumb = await sharp(batches.pathOf(batch, 'out', o.name)).resize(tile, tile, { fit: 'contain', background: '#eceef1' }).toBuffer();
+  const x = (i % cols) * (tile + 16) + 16, y = Math.floor(i / cols) * (tile + label + 16) + 16;
+  const warn = o.flags?.some(f => ['stamped', 'low-res'].includes(f.code));
+  const text = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${tile}" height="${label}"><text x="0" y="16" font-family="Arial" font-size="13" fill="${warn ? '#a35f00' : '#000'}">${o.name.replace(/[<&>]/g, '').slice(0, 34)}</text><text x="0" y="33" font-family="Arial" font-size="12" fill="#59616b">${o.width} × ${o.height}${warn ? ' · conferir' : ''}</text></svg>`);
+  composites.push({ input: thumb, left: x, top: y }, { input: text, left: x, top: y + tile + 4 });
+}
+await sharp({ create: { width: cols * (tile + 16) + 16, height: rows * (tile + label + 16) + 16, channels: 3, background: '#ffffff' } })
+  .composite(composites).jpeg({ quality: 88 }).toFile(path.join(out, 'folha-de-contato.jpg'));
+if (outputs.length) { const { file } = await batches.zip(batch.id); await copyFile(file, path.join(out, 'capas-com-selo.zip')); }
+
+const summary = batches.summary(batch);
+const report = {
+  date: new Date().toISOString(), node: process.versions.node, sharp: sharp.versions.sharp, input: path.basename(source), logo: logoSource, seconds,
+  counts: summary.counts, ignored: batch.ingest.ignored, ingestErrors: batch.ingest.errors,
+  items: batch.items.map(i => ({ source: i.source, status: i.status, platforms: i.platforms, platformSource: i.platformSource, size: i.width && [i.width, i.height], outputs: (i.outputs ?? []).map(o => o.name), flags: i.flags.map(f => f.code), error: i.error })),
+};
+await writeFile(path.join(out, 'relatorio.json'), JSON.stringify(report, null, 2));
+const n = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+console.log(`VALIDAÇÃO OK: ${n(summary.counts.done, 'capa pronta', 'capas prontas')}, ${n(summary.counts.outputs, 'imagem', 'imagens')}, ${n(summary.counts.errors, 'falha', 'falhas')}, ${summary.counts.flagged} para conferir, em ${seconds.toFixed(1)} s.\nFolha de contato e relatório: ${out}`);

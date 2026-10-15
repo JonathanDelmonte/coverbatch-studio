@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- icon.svg for 16 to 32 px: the scene would turn to noise, so the tile shows
+       the sticker alone, as large as it fits. Also the browser tab icon. -->
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f86d2"/><stop offset="1" stop-color="#123f6b"/></linearGradient>
+    <clipPath id="pill"><rect x="121.6" y="365.6" width="780.8" height="292.8" rx="76"/></clipPath>
+  </defs>
+  <rect x="24" y="24" width="976" height="976" rx="219.6" fill="url(#plate)"/>
+  <g clip-path="url(#pill)">
+    <rect x="121.6" y="365.6" width="780.8" height="292.8" fill="#fff"/>
+    <path d="M121.6 365.6h234.2l-62.2 292.8H121.6z" fill="#0f3459"/>
+  </g>
+</svg>
