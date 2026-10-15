@@ -11,3 +11,6 @@ outputs/
 *.webp
 *.env
 .env*
+
+# Screenshots for the README: synthetic TESTE material only.
+!docs/*.png

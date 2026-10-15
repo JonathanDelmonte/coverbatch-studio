@@ -11,7 +11,6 @@
     "start": "node scripts/launcher.js",
     "test": "node --test test/*.test.js",
     "validate:real": "node scripts/validate-real.js",
-    "package": "node scripts/package-source.js",
     "package:windows": "node scripts/package-windows.js",
     "verify:windows": "node scripts/verify-windows.js",
     "package:macos": "node scripts/package-macos.js",
