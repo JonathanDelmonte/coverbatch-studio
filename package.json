@@ -1,11 +1,11 @@
 {
   "name": "coverbatch-studio",
-  "version": "0.3.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Local batch cover compositor with portable PNG templates and product manifests",
+  "description": "Carimba capas de jogos com o selo da plataforma e a logo da loja, em lote e localmente",
   "type": "module",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node scripts/launcher.js",
@@ -13,13 +13,15 @@
     "validate:real": "node scripts/validate-real.js",
     "package": "node scripts/package-source.js",
     "package:windows": "node scripts/package-windows.js",
-    "verify:windows": "node scripts/verify-windows.js"
+    "verify:windows": "node scripts/verify-windows.js",
+    "package:macos": "node scripts/package-macos.js",
+    "verify:macos": "node scripts/verify-macos.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
-    "csv-parse": "^7.0.3",
     "express": "^5.1.0",
     "multer": "^2.0.2",
+    "opentype.js": "2.0.0",
     "sharp": "^0.35.5",
     "yauzl": "^3.2.0"
   }
