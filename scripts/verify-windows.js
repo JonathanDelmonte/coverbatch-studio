@@ -137,3 +137,5 @@ const result = { version: manifest.version, node: manifest.node, zipSha256: sha2
 await fs.mkdir(path.resolve('outputs'), { recursive: true });
 await fs.writeFile(branded ? 'outputs/verificacao-pacote-kabban.json' : 'outputs/verificacao-pacote-windows.json', JSON.stringify(result, null, 2));
 console.log('VALIDAÇÃO WINDOWS OK:', JSON.stringify(result));
+// Passed: the test folder (extracted ZIP, installed copy) is not needed any more.
+await fs.rm(stage, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
