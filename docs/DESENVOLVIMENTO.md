@@ -73,7 +73,7 @@ O kit é instalado uma única vez por `id` de perfil e vira o "original" dos bot
 | `lib/kit.js`, `lib/profile.js` | kit da loja, original para restaurar, migrações e perfil privado |
 | `public/` | interface sem etapa de build (`app.js`, `js/*`, fonte Archivo local) |
 | `scripts/` | lançador do motor, pacotes de Windows e Mac e suas verificações, validação com capas reais |
-| `packaging/` | lançadores (C# e bash), guias de uso e `como-instalar.html` |
+| `packaging/` | lançadores (C# e bash) e o guia ilustrado `como-instalar.html` |
 | `assets/` | fontes, logotipos PS4/PS5 e o ícone (`icon*.svg`; `icon-macos*` no grid da Apple; `*-small` abaixo de 48 px) |
 | `test/` | testes (`node --test`) |
 | `docs/` | esta página, botões de download e capturas de tela do README |

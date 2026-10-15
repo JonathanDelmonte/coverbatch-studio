@@ -106,7 +106,7 @@ console.log(`Instalador: ${path.basename(installer)} (${((await fs.stat(installe
 const target = path.join(stage, 'Programas', folder);
 const setup = started(installer, ['/silencioso', `/destino=${target}`, ...(withRegistry ? ['/registrar', '/atalho-area-de-trabalho'] : [])], path.join(stage, 'estado-instalador'));
 assert.equal(await setup.exited, 0, 'instalação silenciosa');
-for (const f of [manifest.launcherName, 'app/scripts/launcher.js', 'runtime/node.exe', 'distribuicao.json', 'LEIA-ME.txt', 'Como instalar.html']) assert.ok(await exists(path.join(target, f)), `instalado: ${f}`);
+for (const f of [manifest.launcherName, 'app/scripts/launcher.js', 'runtime/node.exe', 'distribuicao.json', 'Como instalar.html']) assert.ok(await exists(path.join(target, f)), `instalado: ${f}`);
 const installedExe = path.join(target, manifest.launcherName);
 // PowerShell with UTF-8 output: reg.exe prints accented paths in the OEM codepage.
 const ps = async command => (await run('powershell.exe', ['-NoProfile', '-Command', `[Console]::OutputEncoding=[Text.Encoding]::UTF8; ${command}`])).stdout.trim();

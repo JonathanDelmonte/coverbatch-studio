@@ -20,7 +20,7 @@ const ok = text => console.log(`ok  ${text}`);
 
 // --- 1. The ZIP as Archive Utility will see it ----------------------------------
 const entries = new Map();
-const wanted = name => /Contents\/(Info\.plist|PkgInfo|MacOS\/|Resources\/(AppIcon\.icns|distribuicao\.json|runtime\/node-|perfil\/))|\.node$|\.dylib$|LEIA-ME\.txt$|Como instalar\.html$/.test(name);
+const wanted = name => /Contents\/(Info\.plist|PkgInfo|MacOS\/|Resources\/(AppIcon\.icns|distribuicao\.json|runtime\/node-|perfil\/))|\.node$|\.dylib$|Como instalar\.html$/.test(name);
 await new Promise((resolve, reject) => yauzl.open(zipFile, { lazyEntries: true }, (error, zip) => {
   if (error) return reject(error);
   zip.on('error', reject); zip.on('end', resolve);
@@ -71,8 +71,9 @@ ok('Info.plist, PkgInfo e ícone .icns válidos');
 const launcher = get(`${app}/MacOS/${executable}`).bytes.toString('utf8');
 assert.ok(!launcher.includes('\r'), 'lançador com quebras de linha Unix'); assert.ok(launcher.startsWith('#!/bin/bash\n'));
 assert.ok(!launcher.includes('__NAME__') && launcher.includes(`NAME="${name}"`));
-const readme = get(`${name}/LEIA-ME.txt`).bytes.toString('utf8');
-assert.ok(!readme.includes('__NAME__') && readme.includes(name));
+const guide = get(`${name}/Como instalar.html`).bytes.toString('utf8');
+assert.ok(!/__[A-Z]+__/.test(guide) && guide.includes(name) && guide.includes('data-os="mac"'), 'guia de instalação do Mac');
+assert.ok(![...entries.keys()].some(f => /LEIA-ME/i.test(f)), 'sem LEIA-ME: o guia e a Ajuda bastam');
 const manifest = JSON.parse(get(`${app}/Resources/distribuicao.json`).bytes.toString('utf8'));
 assert.equal(manifest.privateDataIncluded, privateBuild); assert.equal(manifest.node, config.nodeVersion);
 const profileFiles = [...entries.keys()].filter(f => f.startsWith(`${app}/Resources/perfil/`));
