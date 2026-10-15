@@ -1,11 +1,20 @@
 import path from 'node:path';
-import { mkdir, mkdtemp } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { after } from 'node:test';
 import sharp from 'sharp';
 
 // Synthetic, clearly-marked TESTE material only: no store covers or brands.
+// Each test file's folders go when that file finishes (KEEP_TEST_DIRS=1 keeps them).
+const created = [];
+after(async () => {
+  if (process.env.KEEP_TEST_DIRS === '1') return;
+  await Promise.all(created.map(dir => rm(dir, { recursive: true, force: true, maxRetries: 5 }).catch(() => {})));
+});
 export async function tempDir(prefix) {
-  await mkdir(path.resolve('work'), { recursive: true });
-  return mkdtemp(path.resolve('work', `${prefix}-`));
+  await mkdir(path.resolve('work', 'testes'), { recursive: true });
+  const dir = await mkdtemp(path.resolve('work', 'testes', `${prefix}-`));
+  created.push(dir);
+  return dir;
 }
 
 export function cover(width, height, color = '#2d4f7c', format = 'jpeg') {

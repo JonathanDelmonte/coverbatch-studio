@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="330" height="56" viewBox="0 0 330 56" role="img" aria-label="Baixar para Mac">
+  <!-- The app's primary button: ink pill, blue block slanted 12°, download arrow. -->
+  <clipPath id="p"><rect width="330" height="56" rx="28"/></clipPath>
+  <g clip-path="url(#p)">
+    <rect width="330" height="56" fill="#0b0f13"/>
+    <path d="M0 0h68l-11.9 56H0z" fill="#1d6ab2"/>
+  </g>
+  <path d="M32 17v17m-7-7 7 7 7-7M23 39h18" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="80" y="26" fill="#fff" font-family="Segoe UI,-apple-system,Helvetica,Arial,sans-serif" font-size="17" font-weight="700">Baixar para Mac</text>
+  <text x="80" y="43" fill="#aab4bf" font-family="Segoe UI,-apple-system,Helvetica,Arial,sans-serif" font-size="12">macOS 11 ou mais novo, chip Apple ou Intel</text>
+</svg>

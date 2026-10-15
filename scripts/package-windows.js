@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, writeFile, readdir, stat } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
@@ -9,7 +9,7 @@ import { createWriteStream } from 'node:fs';
 import { readZip, writeZip } from '../lib/zip.js';
 import { sha256 as hash } from '../lib/files.js';
 import { prepareExeBuild, compileLauncher, compileSetup } from './windows-exe.js';
-import { projectRoot, copyApplication, copyProfile, thirdPartyNotices, renderGuide } from './package-common.js';
+import { projectRoot, freshStage, copyApplication, copyProfile, thirdPartyNotices, renderGuide } from './package-common.js';
 
 const run = promisify(execFile);
 export async function buildWindows({ nodeZip, offline = false, profileRoot } = {}) {
@@ -19,7 +19,7 @@ export async function buildWindows({ nodeZip, offline = false, profileRoot } = {
   const config = JSON.parse(await readFile(path.join(projectRoot, 'packaging/windows.json'), 'utf8'));
   const pkg = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
   const work = path.join(projectRoot, 'work'); await mkdir(work, {recursive:true});
-  const stage = await mkdtemp(path.join(work, 'windows-build-'));
+  const stage = await freshStage('windows');
   const branded = !!profileRoot;
   const folderName = branded ? 'Criador de capas Kabban' : 'CoverBatch Studio';
   const launcherName = `${folderName}.exe`;
@@ -72,7 +72,7 @@ export async function buildWindows({ nodeZip, offline = false, profileRoot } = {
   const installGuide=await renderGuide({os:'windows',name:folderName,version:pkg.version,zip:assetName,installer:setupName});
   await writeFile(path.join(root,'Como instalar.html'),installGuide);
   // The program's .exe and the installer are compiled with the C# compiler built into Windows.
-  const build=await mkdtemp(path.join(work,'exe-build-'));
+  const build=await freshStage('exe');
   await prepareExeBuild(build,product);
   await compileLauncher(build,path.join(root,launcherName));
   const files=[];
