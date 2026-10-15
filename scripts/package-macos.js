@@ -83,11 +83,9 @@ export async function buildMacos({ profileRoot, offline = false } = {}) {
   await writeFile(path.join(resources, 'AppIcon.icns'), await icns(await icon('icon-macos.svg'), { smallSvg: await icon('icon-macos-small.svg') }));
   await writeFile(path.join(resources, 'THIRD-PARTY-NOTICES.txt'), thirdPartyNotices(`${config.nodeVersion} (macOS)`));
 
-  // Next to the app in the ZIP: the illustrated guide, the text guide and a link
-  // to Applications. The illustrated guide also goes to outputs/, to send ahead.
+  // Next to the app in the ZIP: the illustrated guide and a link to Applications.
+  // The guide also goes to outputs/, to send ahead; the help lives in the app.
   const assetName = branded ? 'Criador-de-capas-Kabban-macOS-PRIVADO.zip' : config.assetName;
-  const readme = (await readFile(path.join(projectRoot, 'packaging/LEIA-ME-macOS.txt'), 'utf8')).replace(/\r\n/g, '\n').replaceAll('__NAME__', name);
-  await writeFile(path.join(top, 'LEIA-ME.txt'), `${name} ${pkg.version}\n\n${branded ? 'PACOTE PRIVADO: contém as marcas da Kabban. Compartilhe só com a loja.\n\n' : ''}${readme}`);
   const guide = await renderGuide({ os: 'mac', name, version: pkg.version, zip: assetName, minMac: config.minimumSystem.replace(/\.0$/, '') });
   await writeFile(path.join(top, 'Como instalar.html'), guide);
 
