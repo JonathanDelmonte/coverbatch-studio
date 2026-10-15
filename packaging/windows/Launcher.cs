@@ -247,6 +247,7 @@ static class Uninstaller
 {
     // Only what the installer put here is removed: never anything else in the folder.
     static readonly string[] Folders = { "app", "runtime", "perfil" };
+    // LEIA-ME.txt shipped up to 1.1.0; it stays listed so updated installs still uninstall cleanly.
     static readonly string[] Files = { "LEIA-ME.txt", "Como instalar.html", "THIRD-PARTY-NOTICES.txt", "distribuicao.json" };
 
     public static int Run(string root, Options options)

@@ -62,9 +62,6 @@ export async function buildWindows({ nodeZip, offline = false, profileRoot } = {
     'set "COVERBATCH_PORTABLE_ROOT=%ROOT%"','"%ROOT%runtime\\node.exe" "%ROOT%app\\scripts\\launcher.js"','if errorlevel 1 pause',''].join('\r\n');
   await mkdir(path.join(root,'app','suporte'),{recursive:true});
   await writeFile(path.join(root,consoleLauncher),cmd);
-  const guide=(await readFile(path.join(projectRoot,'packaging/LEIA-ME.txt'),'utf8')).replace(/\r\n/g,'\n');
-  const clientGuide=branded ? guide.replaceAll('Instalar-CoverBatch-Studio.exe','Instalar-Criador-de-capas-Kabban-PRIVADO.exe').replaceAll('CoverBatch-Studio-Windows-x64.zip','Criador-de-capas-Kabban-Windows-x64-PRIVADO.zip').replaceAll('CoverBatch Studio','Criador de capas Kabban').replace(/^Baixe .+$/m,'Use o instalador privado recebido diretamente: ele já traz o kit da loja (selo e logo).') : guide;
-  await writeFile(path.join(root,'LEIA-ME.txt'),folderName+' '+pkg.version+'\r\n\r\n'+(branded?'PACOTE PRIVADO: contém as marcas e a referência fornecidas para a Kabban. Compartilhe diretamente com o cliente.\r\n\r\n':'')+clientGuide.replaceAll('\n','\r\n'));
   await writeFile(path.join(root,'THIRD-PARTY-NOTICES.txt'),thirdPartyNotices(config.nodeVersion,'\r\n'));
   // The illustrated guide: next to the program, and in outputs/ to send with the download.
   const assetName=branded?'Criador-de-capas-Kabban-Windows-x64-PRIVADO.zip':config.assetName;
