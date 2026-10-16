@@ -6,14 +6,20 @@ import { Kit } from '../lib/kit.js';
 import { Batches } from '../lib/batch.js';
 import { seedProfile } from '../lib/profile.js';
 import { sha256 } from '../lib/files.js';
+import { FITS, FORMAT_KEYS, normalizeFormat } from '../lib/framing.js';
 
 // Runs the real pipeline on a client's covers and writes a contact sheet for a
 // visual check. Results are private: they stay in work/ and outputs/.
 //   npm run validate:real -- <zip-ou-pasta> [--logo logo.png|svg] [--profile pasta-do-perfil]
+//     [--formato original|4x5|1x1|3x4|2x3|16x9|9x16] [--encaixe cover|contain]
 const args = process.argv.slice(2);
+const VALUED = ['--logo', '--profile', '--formato', '--encaixe'];
 const flag = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-const input = args.find((a, i) => !a.startsWith('--') && !['--logo', '--profile'].includes(args[i - 1]));
-if (!input) throw new Error('Uso: npm run validate:real -- "C:\\caminho\\capas.zip" [--logo logo.png] [--profile pasta]');
+const input = args.find((a, i) => !a.startsWith('--') && !VALUED.includes(args[i - 1]));
+if (!input) throw new Error('Uso: npm run validate:real -- "C:\\caminho\\capas.zip" [--logo logo.png] [--profile pasta] [--formato 4x5] [--encaixe contain]');
+// Checked before any folder is created, so a typo leaves nothing behind.
+if (flag('--formato') && !normalizeFormat(flag('--formato'))) throw new Error(`Formato desconhecido: ${flag('--formato')}. Use ${FORMAT_KEYS.join(', ')}.`);
+if (flag('--encaixe') && !FITS.includes(flag('--encaixe'))) throw new Error(`Encaixe desconhecido: ${flag('--encaixe')}. Use ${FITS.join(' ou ')}.`);
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const data = path.resolve('work/private', `validacao-${stamp}`);
 const out = path.resolve('outputs', `validacao-${stamp}`);
@@ -24,6 +30,8 @@ let logoSource = 'TESTE (sintética)';
 if (flag('--profile')) { await seedProfile(data, kit, flag('--profile')); logoSource = 'perfil privado'; }
 else if (flag('--logo')) { await kit.setLogo(await readFile(path.resolve(flag('--logo'))), path.basename(flag('--logo'))); logoSource = path.basename(flag('--logo')); }
 else await kit.setLogo(await sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="330" height="110"><text x="165" y="76" font-family="Arial" font-weight="700" font-size="60" letter-spacing="8" text-anchor="middle" fill="#fff">TESTE</text></svg>')).png().toBuffer(), 'TESTE.png');
+// The format the store really uses (the kit's own otherwise); the kit validates both values.
+if (flag('--formato') || flag('--encaixe')) await kit.update({ output: { ...(flag('--formato') && { size: flag('--formato') }), ...(flag('--encaixe') && { fit: flag('--encaixe') }) } });
 
 const files = [];
 const source = path.resolve(input);
@@ -72,7 +80,8 @@ if (outputs.length) { const { file } = await batches.zip(batch.id); await copyFi
 
 const summary = batches.summary(batch);
 const report = {
-  date: new Date().toISOString(), node: process.versions.node, sharp: sharp.versions.sharp, input: path.basename(source), logo: logoSource, seconds,
+  date: new Date().toISOString(), node: process.versions.node, sharp: sharp.versions.sharp, input: path.basename(source), logo: logoSource,
+  format: kit.data.output.size, fit: kit.data.output.fit, seconds,
   counts: summary.counts, ignored: batch.ingest.ignored, ingestErrors: batch.ingest.errors,
   items: batch.items.map(i => ({ source: i.source, status: i.status, platforms: i.platforms, platformSource: i.platformSource, size: i.width && [i.width, i.height], outputs: (i.outputs ?? []).map(o => o.name), flags: i.flags.map(f => f.code), error: i.error })),
 };

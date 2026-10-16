@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import sharp from 'sharp';
 import { createApp } from '../server.js';
 import { writeZip, readZip } from '../lib/zip.js';
-import { cover, tempDir, testLogo, waitFor } from './helpers.js';
+import { cover, halves, tempDir, testLogo, waitFor } from './helpers.js';
 
 async function start() {
   const root = await tempDir('server');
@@ -32,6 +32,8 @@ test('servidor local recusa outros hosts, outras origens e escrita sem token', a
     const page = await fetch(`${s.base}/`);
     assert.match(page.headers.get('content-security-policy'), /default-src 'self'/);
     assert.equal((await fetch(`${s.base}/fonts/selo-bold.ttf`)).status, 200);
+    const malformed = await fetch(`${s.base}/api/kit`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-local-token': s.token }, body: '{"output":' });
+    assert.deepEqual([malformed.status, (await malformed.json()).error], [400, 'Pedido inválido. Recarregue a página.']);
   } finally { await s.stop(); }
 });
 
@@ -113,5 +115,40 @@ test('restaurar o kit pela API, amostras da logo e pasta de dados', async () => 
 
     assert.equal((await post('/api/data/open')).status, 200);
     assert.equal(s.opened.at(-1), session.system.dataDir);
+  } finally { await s.stop(); }
+});
+
+test('enquadramento pela API: regras servidas ao navegador, arte inteira para o editor, validação', async () => {
+  const s = await start();
+  const send = (url, method, json) => fetch(`${s.base}${url}`, { method, headers: { 'x-local-token': s.token, 'Content-Type': 'application/json' }, body: JSON.stringify(json) });
+  try {
+    const shared = await fetch(`${s.base}/js/framing.js`);
+    assert.equal(shared.status, 200);
+    assert.match(shared.headers.get('content-type'), /javascript/);
+    assert.match(await shared.text(), /export function placeArt/);
+
+    const form = new FormData();
+    form.append('files', new Blob([await halves(2400, 1200)]), 'larga-ps4.png');
+    form.append('paths', JSON.stringify(['larga-ps4.png'])); form.append('title', 'larga');
+    const created = await fetch(`${s.base}/api/batches`, { method: 'POST', headers: { 'x-local-token': s.token }, body: form }).then(r => r.json());
+    const ready = () => waitFor(async () => { const b = await fetch(`${s.base}/api/batches/${created.id}`).then(r => r.json()); return b.status === 'done' && b; });
+    await ready();
+    assert.equal((await send(`/api/batches/${created.id}`, 'PATCH', { format: '1x1' })).status, 200);
+    assert.equal((await send(`/api/batches/${created.id}`, 'PATCH', { format: '8x10' })).status, 400);
+    let item = (await ready()).items[0];
+    assert.deepEqual([item.width, item.height, item.format], [1200, 1200, '1x1']);
+
+    const src = await fetch(`${s.base}/api/batches/${created.id}/items/${item.id}/thumb/src`);
+    assert.equal(src.headers.get('content-type'), 'image/webp');
+    const meta = await sharp(Buffer.from(await src.arrayBuffer())).metadata();
+    assert.deepEqual([meta.width, meta.height], [2000, 1000], 'a arte inteira, reduzida para o editor');
+
+    const item$ = `/api/batches/${created.id}/items/${item.id}`;
+    assert.equal((await send(item$, 'PATCH', { frame: { format: '1x1', x: 'a', y: 0, zoom: 1 } })).status, 400);
+    assert.equal((await fetch(`${s.base}${item$}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{"frame":{"format":"1x1","x":0,"y":0,"zoom":1}}' })).status, 403, 'exige o token da sessão');
+    const framed = await send(item$, 'PATCH', { frame: { format: '1x1', x: 1, y: 0.5, zoom: 0 } }).then(r => r.json());
+    assert.deepEqual(framed.frames, { '1x1': { x: 1, y: 0.5, zoom: 0 } });
+    item = (await ready()).items[0];
+    assert.deepEqual(item.rendered, { format: '1x1', frame: { x: 1, y: 0.5, zoom: 0 } });
   } finally { await s.stop(); }
 });

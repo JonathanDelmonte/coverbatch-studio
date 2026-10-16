@@ -28,7 +28,20 @@ export async function applicationFiles() {
     }
   }
   for (const dir of ['lib', 'public', 'assets']) await walk(dir);
+  await assertNoToolTraces(files);
   return files;
+}
+
+// Nothing of the tools the app was developed with travels to the client: their
+// instruction files and folders, or a mention of them in the app's own files.
+const TOOL_FILES = /(^|\/)(\.claude|\.cursor|\.copilot|\.aider[^/]*|CLAUDE(\.local)?\.md|AGENTS\.md|GEMINI\.md|\.cursorrules)(\/|$)/i;
+const TOOL_WORDS = /\b(claude|anthropic|openai|chatgpt|copilot|gemini)\b|co-authored-by/i;
+const TEXT_FILE = /\.(c?js|mjs|json|css|html?|svg|md|txt|xml)$/i;
+export async function assertNoToolTraces(files) {
+  for (const file of files) {
+    if (TOOL_FILES.test(file)) throw new Error(`Arquivo de ferramenta de IA no pacote: ${file}`);
+    if (TEXT_FILE.test(file) && TOOL_WORDS.test(await readFile(path.join(projectRoot, file), 'utf8'))) throw new Error(`Menção a ferramenta de IA no pacote: ${file}`);
+  }
 }
 
 export async function copyApplication(destination) {

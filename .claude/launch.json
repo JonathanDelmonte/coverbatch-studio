@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["scripts/launcher.js", "--no-browser", "--data", "work/dev-data", "--port", "4390"],
       "port": 4390
+    },
+    {
+      "name": "coverbatch-teste",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/launcher.js", "--no-browser", "--data", "work/ui-teste", "--port", "4391"],
+      "port": 4391
     }
   ]
 }

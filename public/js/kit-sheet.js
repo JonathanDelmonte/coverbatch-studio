@@ -1,6 +1,7 @@
 import { h, icon, seg, fill } from './dom.js';
 import { api, download } from './api.js';
 import { debounce, phraseName, LABEL_KEYS, LABEL_NAMES } from './util.js';
+import { FIT_OPTIONS, formatGrid, formatSize } from './formats.js';
 
 const RATIOS = [['4x5', 'Retrato 4:5', 0.8], ['1x1', 'Quadrada 1:1', 1], ['16x9', 'Paisagem 16:9', 16 / 9]];
 const SLIDERS = [
@@ -260,9 +261,14 @@ export function openKit(ctx) {
       'Usada em todos os lotes, a não ser que você escolha outra frase no lote ou na capa.'),
       field('Quando o nome do arquivo não diz a plataforma',
         seg([['PS4', 'PS4'], ['PS5', 'PS5'], ['both', 'PS4 e PS5']], o.fallback.length === 2 ? 'both' : o.fallback[0], v => set({ fallback: v === 'both' ? ['PS4', 'PS5'] : [v] }), 'Plataforma padrão')),
-      field('Formato', seg([['jpeg', 'JPEG'], ['png', 'PNG']], o.format, v => set({ format: v }), 'Formato'), o.format === 'jpeg' ? 'JPEG: arquivos leves, o que as lojas recomendam.' : 'PNG: sem perda, arquivos bem maiores.'),
-      quality,
-      field('Tamanho', seg([['original', 'Igual ao original'], ['store', '1200 × 1500, recortada']], o.size, v => set({ size: v }), 'Tamanho')));
+      field('Formato da imagem', formatGrid(o.size, v => set({ size: v })), o.size === 'original'
+        ? 'Cada capa sai inteira, no formato e no tamanho da imagem enviada (as capas da PlayStation Store são quadradas).'
+        : `Toda capa sai com ${formatSize(o.size)} pixels. No lote dá para trocar o formato, e na capa aberta, "Ajustar enquadramento" escolhe o que aparece.`),
+      o.size !== 'original' && field('Quando a arte tem outro formato', seg(FIT_OPTIONS, o.fit, v => set({ fit: v }), 'Encaixe'), o.fit === 'contain'
+        ? 'Capa inteira: a arte aparece toda, e um fundo desfocado feito da própria arte completa a capa.'
+        : 'Preencher: a arte ocupa a capa toda, centralizada, e o que sobra é recortado.'),
+      field('Tipo de arquivo', seg([['jpeg', 'JPEG'], ['png', 'PNG']], o.format, v => set({ format: v }), 'Tipo de arquivo'), o.format === 'jpeg' ? 'JPEG: arquivos leves, o que as lojas recomendam.' : 'PNG: sem perda, arquivos bem maiores.'),
+      quality);
   }
 
   function transferSection() {

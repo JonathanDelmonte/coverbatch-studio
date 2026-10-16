@@ -40,6 +40,11 @@ export function openHelp(ctx) {
       h('p', null, `Envio imediato, Acesso imediato e Pré-venda. Cada plataforma tem a sua frase padrão: hoje, ${phrases} (muda em Kit da loja, Imagens finais).`),
       h('p', null, 'No topo do lote, "Frase" troca a de todas as capas. Na capa aberta em tamanho grande, dá para escolher só para ela.')),
 
+    section('Formato e enquadramento',
+      h('p', null, '"Formato", no topo do lote, escolhe como as imagens saem: Original (a capa inteira, no formato da imagem enviada; as da PlayStation Store são quadradas) ou um formato fixo: Retrato 4:5 (1200 × 1500), Quadrada 1:1, Retrato 3:4, Retrato 2:3, Paisagem 16:9 ou Story 9:16. O padrão fica no Kit da loja, em Imagens finais.'),
+      h('p', null, '"Encaixe" decide o que acontece quando a arte tem outro formato: Preencher ocupa a capa toda e recorta o que sobra; Capa inteira mostra a arte toda e completa a capa com um fundo desfocado feito da própria arte.'),
+      h('p', null, 'Título cortado? Abra a capa e clique em "Ajustar enquadramento" (ou dê dois cliques na imagem). Arraste a arte, aproxime ou afaste com a roda do mouse, o gesto de pinça ou o zoom e veja o selo e a logo onde vão ficar. "Aplicar" refaz só aquela capa.')),
+
     section('Avisos',
       h('p', null, h('span', { class: 'help-dot is-amber' }), 'Amarelo pede uma conferida: capa que parece já ter o selo (para não carimbar duas vezes), resolução baixa, ou capa sem plataforma no nome.'),
       h('p', null, h('span', { class: 'help-dot is-red' }), 'Vermelho é um arquivo que não abriu: imagem corrompida ou em formato sem suporte. As outras capas seguem normalmente.'),
@@ -47,7 +52,7 @@ export function openHelp(ctx) {
 
     section('Desfazer e restaurar',
       h('p', null, '"Desfazer escolhas", no topo do lote, devolve tudo ao automático: plataformas pelo nome e frase padrão do kit. Capas tiradas do lote voltam.'),
-      h('p', null, '"Desfazer ajustes desta capa", na capa aberta, faz o mesmo só com ela.'),
+      h('p', null, '"Desfazer escolhas" não mexe nos enquadramentos ajustados à mão. "Desfazer ajustes desta capa", na capa aberta, volta tudo dela ao automático, inclusive o enquadramento.'),
       h('p', null, 'No Kit da loja, cada parte alterada ganha o botão "Restaurar original", e "Restaurar tudo", no fim do painel, volta ao kit que veio instalado. Logo depois de restaurar, "Desfazer" traz as suas alterações de volta.')),
 
     section('Kit da loja',
@@ -71,6 +76,8 @@ export function openHelp(ctx) {
       h('dl', { class: 'help-keys' },
         h('dt', null, combo(MOD_KEY, 'V')), h('dd', null, 'Cola uma imagem copiada'),
         h('dt', null, kbd('←'), ' ', kbd('→')), h('dd', null, 'Capa anterior e próxima, com uma capa aberta'),
+        h('dt', null, kbd('←'), ' ', kbd('↑'), ' ', kbd('→'), ' ', kbd('↓')), h('dd', null, 'Movem a arte, ao ajustar o enquadramento (com Shift, mais longe)'),
+        h('dt', null, kbd('+'), ' ', kbd('−')), h('dd', null, 'Zoom da arte, ao ajustar o enquadramento'),
         h('dt', null, kbd('Esc')), h('dd', null, 'Fecha o painel aberto'),
         h('dt', null, kbd('?')), h('dd', null, 'Abre esta ajuda'))),
 

@@ -154,3 +154,16 @@ test('restaurar original: edição privada volta ao kit do perfil, inclusive a l
   assert.equal(reopened.original.logoOpacity, 0.75);
   assert.equal(reopened.data.logoOpacity, 0.75);
 });
+
+test('formato da imagem e encaixe no kit: "store" da v1.1 vira 4:5, valores estranhos recusados', async () => {
+  const root = await tempDir('kit-format');
+  await writeFile(path.join(root, 'kit.json'), JSON.stringify({ ...defaultKit(), output: { format: 'jpeg', quality: 90, size: 'store', fallback: ['PS4'], phrase: { PS4: 'immediate', PS5: 'access' } } }));
+  const kit = await new Kit(root).load();
+  assert.deepEqual([kit.data.output.size, kit.data.output.fit, kit.data.output.quality], ['4x5', 'cover', 90]);
+  await kit.update({ output: { size: '9x16', fit: 'contain' } });
+  assert.deepEqual([kit.data.output.size, kit.data.output.fit], ['9x16', 'contain']);
+  await assert.rejects(kit.update({ output: { size: '8x10' } }), /Formato da imagem/);
+  await assert.rejects(kit.update({ output: { fit: 'esticar' } }), /Encaixe/);
+  await kit.update({ output: { size: 'store' } });
+  assert.equal(kit.data.output.size, '4x5');
+});
