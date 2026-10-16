@@ -20,7 +20,7 @@ Os testes criam pastas em `work/testes/` e as apagam ao terminar (`KEEP_TEST_DIR
 npm run validate:real -- "C:\caminho\capas.zip" --logo "C:\caminho\logo.png"
 ```
 
-Processa capas reais com o mesmo motor, confere que os originais ficaram intactos e que cada selo está dentro da capa, e grava uma folha de contato e um relatório em `outputs/`. Sem `--logo`, usa uma logo marcada TESTE.
+Processa capas reais com o mesmo motor, confere que os originais ficaram intactos e que cada selo está dentro da capa, e grava uma folha de contato e um relatório em `outputs/`. Sem `--logo`, usa uma logo marcada TESTE. `--formato 4x5` (ou `original`, `1x1`, `3x4`, `2x3`, `16x9`, `9x16`) e `--encaixe contain` validam no formato que a loja usa; sem eles, vale o do kit.
 
 ## Pacotes
 
@@ -35,7 +35,7 @@ Tudo sai em `outputs/`: o instalador e o ZIP portátil do Windows, o ZIP do Mac 
 
 **Windows.** `package:windows` baixa o Node.js oficial fixado por versão e SHA-256 em `packaging/windows.json` e gera o ZIP portátil e o `Instalar-*.exe`. O `.exe` do programa e o instalador (fontes em `packaging/windows/`, C# 5) são compilados com o `csc.exe` que já vem no Windows (.NET Framework 4.8). O `.exe` inicia o motor sem console, abre a interface numa janela própria do Edge (modo app, perfil separado) e o programa se encerra alguns segundos depois que a última janela fecha.
 
-`verify:windows` testa o pacote como o cliente usa, numa pasta nova e só com o runtime incluído: o `.exe` portátil (incluindo a segunda abertura), a instalação silenciosa, o programa instalado carimbando duas capas com os selos oficiais e a desinstalação. Com `-- --com-registro`, confere também os atalhos e a entrada em Configurações > Aplicativos (criados e removidos durante o teste).
+`verify:windows` testa o pacote como o cliente usa, numa pasta nova e só com o runtime incluído: o `.exe` portátil (incluindo a segunda abertura), a instalação silenciosa, o programa instalado carimbando duas capas com os selos oficiais, refazendo-as em outro formato e com enquadramento à mão, e a desinstalação. Com `-- --com-registro`, confere também os atalhos e a entrada em Configurações > Aplicativos (criados e removidos durante o teste).
 
 **Mac.** `package:macos` roda em qualquer sistema (inclusive Windows) e monta um `.app` universal: os Node.js oficiais para Apple silicon e Intel (fixados por SHA-256 em `packaging/macos.json`), o Sharp e a libvips de cada processador, `Info.plist`, ícone `.icns` e o lançador `packaging/macos/launcher.sh`. O ZIP guarda as permissões Unix e um link para Aplicativos. O lançador escolhe o runtime do processador, tira a quarentena dos próprios arquivos depois que a pessoa autorizou o app, pede para mover o app quando ele roda translocado (aberto direto de Downloads), inicia o motor numa sessão própria e abre a janela.
 
@@ -67,9 +67,10 @@ O kit é instalado uma única vez por `id` de perfil e vira o "original" dos bot
 | `server.js` | API local e segurança |
 | `lib/sticker.js` | selo vetorial com os logotipos oficiais (`assets/marks`) e o texto em curvas (opentype.js + Open Sans, em `assets/fonts`) |
 | `lib/layout.js` | geometria para qualquer tamanho de capa; logo dimensionada pela área |
-| `lib/compose.js` | compositor único de prévias, miniaturas, amostras da logo e arquivos finais |
+| `lib/framing.js` | formatos da imagem e posição da arte no quadro; o mesmo arquivo roda no editor do navegador (`/js/framing.js`) |
+| `lib/compose.js` | compositor único de prévias, miniaturas, amostras da logo e arquivos finais; recorte pelo enquadramento e fundo desfocado |
 | `lib/detect.js` | plataforma pelo nome e detecção de selo PS4 ou PS5 já aplicado |
-| `lib/batch.js` | lotes: leitura de ZIP e pastas, fila, nomes, frases por plataforma, ZIP final |
+| `lib/batch.js` | lotes: leitura de ZIP e pastas, fila, nomes, frases por plataforma, formato e enquadramento por capa, ZIP final |
 | `lib/kit.js`, `lib/profile.js` | kit da loja, original para restaurar, migrações e perfil privado |
 | `public/` | interface sem etapa de build (`app.js`, `js/*`, fonte Archivo local) |
 | `scripts/` | lançador do motor, pacotes de Windows e Mac e suas verificações, validação com capas reais |

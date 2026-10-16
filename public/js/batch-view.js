@@ -1,6 +1,7 @@
 import { h, icon, stampButton, seg, put } from './dom.js';
 import { api, stream } from './api.js';
 import { plural, displayTitle, fileName, phraseName, phrasesLine, LABEL_KEYS, FILE_MANAGER, PLATFORM_SOURCE_SHORT } from './util.js';
+import { FORMATS, FIT_OPTIONS, FIT_PHRASES, formatOptions } from './formats.js';
 import { openInspector } from './inspector.js';
 
 const CHECK_FLAGS = ['stamped', 'low-res'];
@@ -58,13 +59,27 @@ export function renderBatch(view, id, ctx) {
 
     const kit = ctx.state.kit;
     const phrase = summary.label && summary.label !== 'auto' ? summary.label : 'auto';
+    const format = summary.format ?? 'auto', fit = summary.fit ?? 'auto';
+    // The fit matters while any cover has a fixed format: the batch's, or one chosen for that cover.
+    const fixed = (format === 'auto' ? kit.output.size : format) !== 'original'
+      || [...items.values()].some(i => !i.excluded && i.format && i.format !== 'original');
+    // What "Padrão" means right now, for each control left on it.
+    const defaults = [
+      phrase === 'auto' && `frase ${phrasesLine(kit, kit.output.phrase)}`,
+      format === 'auto' && `formato ${FORMATS[kit.output.size]?.name ?? ''}`,
+      fixed && fit === 'auto' && FIT_PHRASES[kit.output.fit],
+    ].filter(Boolean);
     put(controls,
       h('div', { class: 'control' }, h('span', { class: 'field-label' }, 'Plataforma'),
         seg([['auto', 'Pelo nome'], ['PS4', 'PS4'], ['PS5', 'PS5'], ['both', 'PS4 e PS5']], summary.platformMode, v => patchBatch({ platformMode: v }), 'Plataforma de todas as capas')),
       h('div', { class: 'control' }, h('span', { class: 'field-label' }, 'Frase'),
         seg([['auto', 'Padrão'], ...LABEL_KEYS.map(k => [k, phraseName(kit, k)])], phrase, v => patchBatch({ label: v }), 'Frase do selo de todas as capas')),
+      h('div', { class: 'control' }, h('span', { class: 'field-label' }, 'Formato'),
+        seg(formatOptions('Padrão'), format, v => patchBatch({ format: v }), 'Formato de todas as capas')),
+      fixed && h('div', { class: 'control' }, h('span', { class: 'field-label' }, 'Encaixe'),
+        seg([['auto', 'Padrão'], ...FIT_OPTIONS], fit, v => patchBatch({ fit: v }), 'Encaixe de todas as capas')),
       summary.modified && h('button', { class: 'btn btn-quiet btn-small', type: 'button', onclick: resetChoices }, icon('undo'), 'Desfazer escolhas'),
-      phrase === 'auto' && h('p', { class: 'control-hint' }, `Padrão do kit: ${phrasesLine(kit, kit.output.phrase)}.`));
+      defaults.length > 0 && h('p', { class: 'control-hint' }, `Padrão do kit: ${defaults.join('; ')}.`));
     renderNotes(); renderFilters();
   }
 
@@ -72,11 +87,11 @@ export function renderBatch(view, id, ctx) {
     try { await api(`/api/batches/${id}/open`, { method: 'POST' }); ctx.toast(`A pasta com as imagens prontas foi aberta no ${FILE_MANAGER}.`); }
     catch (e) { ctx.toast(e.message, { tone: 'error' }); }
   }
-  // Platforms and phrases go back to what the file names and the kit decide;
-  // covers taken out of the batch come back.
+  // Platforms, phrases and formats go back to what the file names and the kit
+  // decide; covers taken out of the batch come back. Framings stay.
   async function resetChoices() {
     const result = await patchBatch({ reset: true });
-    if (result) ctx.toast('Escolhas desfeitas: cada capa voltou à plataforma do nome do arquivo e à frase padrão do kit.');
+    if (result) ctx.toast('Escolhas desfeitas: cada capa voltou à plataforma do nome do arquivo e ao padrão do kit. Os enquadramentos ajustados continuam.');
   }
 
   function renderNotes() {
@@ -167,7 +182,7 @@ export function renderBatch(view, id, ctx) {
   function inspect(itemId) {
     const ids = visible();
     inspector = openInspector(ctx, {
-      batchId: id, ids, index: Math.max(0, ids.indexOf(itemId)), getItem: key => items.get(key), batchLabel: () => summary?.label,
+      batchId: id, ids, index: Math.max(0, ids.indexOf(itemId)), getItem: key => items.get(key), batchInfo: () => summary,
       patch: patchItem, onClose: () => { inspector = null; cards.get(ids[0])?.focus?.({ preventScroll: true }); },
     });
   }
@@ -180,7 +195,11 @@ export function renderBatch(view, id, ctx) {
       for (const item of list) { const previous = items.get(item.id); items.set(item.id, item); updateCard(item, previous); }
       renderHead();
     },
-    item: item => { const previous = items.get(item.id); items.set(item.id, item); updateCard(item, previous); inspector?.refresh(item); renderFilters(); },
+    item: item => {
+      const previous = items.get(item.id); items.set(item.id, item); updateCard(item, previous); inspector?.refresh(item);
+      // A cover's own format can bring the Encaixe control into view (it arrives after the batch's update).
+      if (summary && previous && previous.format !== item.format) renderHead(); else renderFilters();
+    },
     batch: data => { summary = { ...summary, ...data }; renderHead(); },
     kit: kit => { ctx.setKit(kit); api(`/api/batches/${id}`).then(data => { const { items: list, ...rest } = data; summary = rest; for (const item of list) { items.set(item.id, item); updateCard(item); } renderHead(); }).catch(() => {}); },
     removed: () => { location.hash = '#/'; },

@@ -1,4 +1,4 @@
-import { h, icon, fill } from './js/dom.js';
+import { h, icon, fill, put } from './js/dom.js';
 import { api, setToken, upload } from './js/api.js';
 import { plural, displayTitle } from './js/util.js';
 import { accepted, fromInput, titleFor, installDrop, installPaste } from './js/drop.js';
@@ -114,8 +114,10 @@ async function boot() {
   Object.assign(state, { batches: session.batches, profile: session.profile, version: session.version, system: session.system });
   setKit(session.kit);
   if (session.profile?.title) $('bandTitle').textContent = session.profile.title;
+  // The developer's mark next to the name: a private profile may bring its own; ZIRTUNO's ships with the app.
   const dev = session.profile?.developer || 'ZIRTUNO';
-  $('footDev').replaceChildren(...[session.profile?.hasDeveloperLogo && h('img', { src: '/api/profile/developer-logo.svg', alt: '' }), `Desenvolvido por ${dev}. Versão ${session.version}.`].filter(Boolean));
+  const devLogo = session.profile?.hasDeveloperLogo ? '/api/profile/developer-logo.svg' : dev.toUpperCase() === 'ZIRTUNO' ? '/zirtuno.svg' : null;
+  put($('footDev'), 'Desenvolvido por', devLogo && h('img', { src: devLogo, alt: '' }), h('span', { class: 'foot-brand' }, dev), h('span', { class: 'foot-version' }, `Versão ${session.version}`));
   $('openKit').addEventListener('click', () => openKit(ctx));
   $('openHelp').prepend(icon('help'));
   $('openHelp').addEventListener('click', () => openHelp(ctx));
