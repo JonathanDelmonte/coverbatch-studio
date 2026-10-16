@@ -15,14 +15,15 @@
 - **Selo oficial**: os logotipos PS4 e PS5 com a frase escolhida, **Envio imediato**, **Acesso imediato** ou **Pré-venda**. PS4 com o bloco azul; PS5 no preto e branco oficial. Desenhado em vetor, nítido em qualquer tamanho de capa.
 - **Logo da loja** no canto oposto, alinhada pelo centro do selo. Logos largas ou quadradas ganham o mesmo peso visual, e uma sombra suave aparece onde a capa é clara.
 - **PS4 ou PS5 pelo nome**: `fc-27-ps4.jpg`, a pasta `PS5/`, `jogo-ps4-ps5.jpg` (sai nas duas) ou o nome do ZIP. Sem indicação, vale o padrão do kit, com aviso e troca em um clique.
-- **Qualquer formato de capa**: retrato, quadrada ou paisagem. O selo mantém o mesmo peso e nunca sai da imagem.
+- **Formato da imagem**: **Original** (a capa inteira, no formato em que veio; as da PlayStation Store são quadradas) ou um formato fixo: **Retrato 4:5** (1200 × 1500), **Quadrada 1:1**, **Retrato 3:4**, **Retrato 2:3**, **Paisagem 16:9** ou **Story 9:16**. Vale para o lote inteiro ou só para uma capa, e o selo mantém o mesmo peso em qualquer formato.
+- **Enquadramento livre**: título cortado? Na capa aberta, **Ajustar enquadramento** deixa arrastar a arte e dar zoom, com o selo e a logo à vista no lugar final. **Capa inteira** mostra a arte toda e completa as sobras com um fundo desfocado feito da própria arte; dá para usar no lote inteiro.
 - **Avisos que poupam retrabalho**: capa que parece já ter o selo, resolução baixa, arquivo que não abre. Uma falha nunca interrompe o lote.
-- **Pronto para a loja**: um ZIP com nomes limpos (`ea-sports-fc-27-ps4.jpg`), em JPEG ou PNG, no tamanho original ou em 1200 × 1500.
+- **Pronto para a loja**: um ZIP com nomes limpos (`ea-sports-fc-27-ps4.jpg`), em JPEG ou PNG.
 
 ## Como usar
 
 1. **Solte as capas** na janela: um ZIP, uma pasta (com subpastas) ou várias imagens. Também dá para colar uma imagem com Ctrl+V (Cmd+V no Mac).
-2. **Confira.** As capas aparecem prontas, uma a uma. Clique numa para comparar o antes e o depois; os botões PS4/PS5 e a frase podem ser trocados no lote inteiro ou só numa capa. **Desfazer escolhas** volta tudo ao automático.
+2. **Confira.** As capas aparecem prontas, uma a uma. Clique numa para comparar sem e com o selo; a plataforma, a frase e o formato podem ser trocados no lote inteiro ou só numa capa, e **Ajustar enquadramento** acerta o que aparece. **Desfazer escolhas** volta o lote ao automático, sem mexer nos enquadramentos ajustados.
 3. **Baixe o ZIP** ou abra a pasta com as imagens prontas.
 
 O botão **Ajuda** (ou a tecla `?`) explica cada função.
@@ -31,7 +32,7 @@ O botão **Ajuda** (ou a tecla `?`) explica cada função.
 
 ## Kit da loja
 
-O que a loja define uma vez fica no **Kit da loja**: a logo, os seis selos (PS4 e PS5 com as três frases) e seus textos e cores, a frase padrão de cada plataforma, a posição e o tamanho de cada elemento e o formato das imagens finais. As prévias mostram o resultado em capas retrato, quadrada e paisagem.
+O que a loja define uma vez fica no **Kit da loja**: a logo, os seis selos (PS4 e PS5 com as três frases) e seus textos e cores, a frase padrão de cada plataforma, a posição e o tamanho de cada elemento e, nas imagens finais, o formato padrão, o encaixe (preencher ou capa inteira) e o tipo de arquivo. As prévias mostram o resultado em capas retrato, quadrada e paisagem.
 
 Cada parte alterada ganha **Restaurar original**, e **Restaurar tudo** volta ao kit que veio instalado. Logo depois de restaurar, **Desfazer** traz as alterações de volta. Para levar o kit a outro computador, use **Exportar kit** e **Importar kit**.
 

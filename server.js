@@ -70,6 +70,8 @@ export async function createApp(dataRoot, { profileRoot, open = openFolder } = {
     if (!file) return next();
     res.sendFile(path.join(appRoot, 'assets', 'fonts', file), { headers: { 'Cache-Control': 'public, max-age=86400' } });
   });
+  // The framing rules of the engine, imported as they are by the framing editor.
+  app.get('/js/framing.js', (_req, res) => res.sendFile(path.join(appRoot, 'lib', 'framing.js')));
   app.use(express.static(path.join(appRoot, 'public'), { index: 'index.html' }));
   const send = (res, file, options = {}) => new Promise((resolve, reject) => res.sendFile(file, { dotfiles: 'allow', ...options }, e => e && !res.headersSent ? reject(httpError(404, 'Arquivo não encontrado.')) : resolve()));
   const removeTemp = async file => { if (file?.path) await unlink(file.path).catch(() => {}); };
@@ -216,11 +218,13 @@ export async function createApp(dataRoot, { profileRoot, open = openFolder } = {
   app.post('/api/batches/:id/reapply', (req, res) => res.json(batches.reapplyKit(req.params.id)));
   app.delete('/api/batches/:id', async (req, res) => { await batches.remove(req.params.id); res.json({ ok: true }); });
   app.patch('/api/batches/:id/items/:item', async (req, res) => res.json(await batches.updateItem(req.params.id, req.params.item, req.body ?? {})));
+  // orig: the cover before the sticker; PS4/PS5: the results; src: the whole art, for framing.
   app.get('/api/batches/:id/items/:item/thumb/:which', async (req, res) => {
     const batch = batches.get(req.params.id), item = batches.item(batch, req.params.item);
-    if (!['orig', ...PLATFORMS].includes(req.params.which)) throw httpError(404, 'Miniatura inexistente.');
+    if (!['orig', 'src', ...PLATFORMS].includes(req.params.which)) throw httpError(404, 'Miniatura inexistente.');
+    const file = req.params.which === 'src' ? await batches.sourcePreview(batch, item) : batches.pathOf(batch, 'thumbs', `${item.id}-${req.params.which}.webp`);
     res.set('Cache-Control', 'private, max-age=31536000, immutable');
-    await send(res, batches.pathOf(batch, 'thumbs', `${item.id}-${req.params.which}.webp`));
+    await send(res, file);
   });
   app.get('/api/batches/:id/items/:item/original', async (req, res) => {
     const batch = batches.get(req.params.id), item = batches.item(batch, req.params.item);
@@ -246,7 +250,10 @@ export async function createApp(dataRoot, { profileRoot, open = openFolder } = {
   app.use((err, _req, res, _next) => {
     if (res.headersSent) return;
     const tooBig = err?.code === 'LIMIT_FILE_SIZE', tooMany = err?.code === 'LIMIT_FILE_COUNT';
-    const message = tooBig ? 'Arquivo grande demais para importar.' : tooMany ? 'Arquivos demais de uma vez (máximo 3 mil).' : err?.message || 'Falha local.';
+    // The JSON parser's own errors are in English and about the request, not the person's files.
+    const badRequest = err?.type === 'entity.parse.failed', hugeRequest = err?.type === 'entity.too.large';
+    const message = tooBig ? 'Arquivo grande demais para importar.' : tooMany ? 'Arquivos demais de uma vez (máximo 3 mil).'
+      : badRequest ? 'Pedido inválido. Recarregue a página.' : hugeRequest ? 'Pedido grande demais.' : err?.message || 'Falha local.';
     res.status(err?.status ?? (err?.code?.startsWith?.('LIMIT_') ? 413 : 400)).json({ error: message });
   });
   return { app, kit, batches, root };

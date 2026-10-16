@@ -84,7 +84,24 @@ async function stamp(url) {
     if (name.includes('ps5')) assert.ok(block.every(c => c > 225) && pill.every(c => c < 40), `selo PS5 oficial no canto inferior esquerdo (${block} / ${pill})`);
     else assert.ok(block[2] > 150 && block[0] < 80 && pill.every(c => c > 225), `selo PS4 oficial no canto inferior esquerdo (${block} / ${pill})`);
   }
+  await framing(url, headers, created.id);
   return headers;
+}
+// Formats and framing with the bundled runtime: the frame, the blurred bands, a
+// framing by hand, the editor's preview and the framing rules served to the page.
+async function framing(url, headers, id) {
+  const json = { ...headers, 'Content-Type': 'application/json' };
+  const ready = async () => { for (let i = 0; i < 400; i++) { const b = await fetch(`${url}/api/batches/${id}`).then(r => r.json()); if (b.status === 'done') return b; await sleep(50); } throw new Error('O lote não terminou de refazer as capas.'); };
+  assert.equal((await fetch(`${url}/api/batches/${id}`, { method: 'PATCH', headers: json, body: JSON.stringify({ format: '1x1', fit: 'contain' }) })).status, 200);
+  let batch = await ready();
+  for (const item of batch.items) assert.deepEqual([item.width, item.height, item.rendered.format], [1200, 1200, '1x1'], 'formato 1:1 com a arte inteira');
+  const item = batch.items[0];
+  const frame = { format: '1x1', x: 0.5, y: 0, zoom: 1.5 };
+  assert.equal((await fetch(`${url}/api/batches/${id}/items/${item.id}`, { method: 'PATCH', headers: json, body: JSON.stringify({ frame }) })).status, 200);
+  batch = await ready();
+  assert.deepEqual(batch.items.find(i => i.id === item.id).rendered, { format: '1x1', frame: { x: 0.5, y: 0, zoom: 1.5 } }, 'enquadramento à mão');
+  assert.equal((await fetch(`${url}/api/batches/${id}/items/${item.id}/thumb/src`)).headers.get('content-type'), 'image/webp', 'arte inteira para o editor');
+  assert.match(await fetch(`${url}/js/framing.js`).then(r => r.text()), /export function placeArt/, 'regras de enquadramento na página');
 }
 async function close(url, headers, launcher) {
   await fetch(url + '/api/shutdown', { method: 'POST', headers });
@@ -133,7 +150,7 @@ if (withRegistry) {
   for (const lnk of shortcuts) assert.ok(!(await exists(lnk)), `atalho removido: ${lnk}`);
 }
 
-const result = { version: manifest.version, node: manifest.node, zipSha256: sha256(await fs.readFile(archive)), installerSha256: sha256(await fs.readFile(installer)), filesVerified: found.size, noGlobalNodeOrNpm: true, portableExe: true, reopenSameInstance: true, stampedOutputs: 2, silentInstall: true, installedRun: true, uninstallClean: true, shortcutsAndSettingsEntry: withRegistry, privateDataIncluded: branded };
+const result = { version: manifest.version, node: manifest.node, zipSha256: sha256(await fs.readFile(archive)), installerSha256: sha256(await fs.readFile(installer)), filesVerified: found.size, noGlobalNodeOrNpm: true, portableExe: true, reopenSameInstance: true, stampedOutputs: 2, formatsAndFraming: true, silentInstall: true, installedRun: true, uninstallClean: true, shortcutsAndSettingsEntry: withRegistry, privateDataIncluded: branded };
 await fs.mkdir(path.resolve('outputs'), { recursive: true });
 await fs.writeFile(branded ? 'outputs/verificacao-pacote-kabban.json' : 'outputs/verificacao-pacote-windows.json', JSON.stringify(result, null, 2));
 console.log('VALIDAÇÃO WINDOWS OK:', JSON.stringify(result));

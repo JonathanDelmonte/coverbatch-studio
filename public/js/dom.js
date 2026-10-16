@@ -40,6 +40,7 @@ const PATHS = {
   trash: 'M5 7h14M9.5 7V5h5v2M7 7l1 12.5h8L17 7',
   undo: 'M9 7.5 4.5 12 9 16.5M5 12h9.5a5 5 0 0 1 0 10H12',
   help: 'M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17zM9.7 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.4v.5M12 16.6v.1',
+  crop: 'M7 3.5V17h13.5M3.5 7H17v13.5',
 };
 export function icon(name) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -54,9 +55,22 @@ export function icon(name) {
 
 // A modal dialog makes the rest of the page inert, toasts included, so each open
 // dialog hosts its own toast region; dialogs re-render with fill() to keep it.
+// Live updates redraw dialogs often, so the control that had keyboard focus gets
+// it back: matched by what it is and says, and by its order among look-alikes.
 export function fill(dialog, ...nodes) {
+  const mark = focusMark(dialog);
   for (const child of [...dialog.children]) if (!child.classList.contains('toasts')) child.remove();
   dialog.prepend(...nodes.flat(Infinity).filter(Boolean));
+  if (mark) (focusables(dialog, mark.key)[mark.index] ?? focusables(dialog, mark.key)[0])?.focus({ preventScroll: true });
+}
+const FOCUSABLE = 'button, input, select, textarea, a[href], [tabindex]';
+const focusKey = el => [el.tagName, el.getAttribute('aria-label') ?? '', el.getAttribute('name') ?? '', ['radio', 'checkbox'].includes(el.type) ? el.value : '', el.textContent.trim()].join('|');
+const focusables = (dialog, key) => [...dialog.querySelectorAll(FOCUSABLE)].filter(el => !el.closest('.toasts') && focusKey(el) === key);
+function focusMark(dialog) {
+  const active = document.activeElement;
+  if (!active || active === dialog || !dialog.contains(active) || active.closest('.toasts')) return null;
+  const key = focusKey(active);
+  return { key, index: focusables(dialog, key).indexOf(active) };
 }
 
 // A primary action wears the sticker: blue slanted block + label.

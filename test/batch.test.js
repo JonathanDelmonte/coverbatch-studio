@@ -7,7 +7,7 @@ import { Kit } from '../lib/kit.js';
 import { Batches } from '../lib/batch.js';
 import { writeZip, readZip } from '../lib/zip.js';
 import { sha256 } from '../lib/files.js';
-import { cover, tempDir, testLogo, waitFor } from './helpers.js';
+import { cover, halves, tempDir, testLogo, waitFor } from './helpers.js';
 
 async function setup(name) {
   const root = await tempDir(name);
@@ -176,4 +176,122 @@ test('lote da v1.0: frase "immediate" salva como padrão vira automática ao rea
   assert.equal(batch.label, 'auto');
   assert.equal(reopened.summary(batch).modified, false);
   assert.deepEqual(reopened.publicBatch(batch).items[0].labels, { PS5: 'access' }, 'frases calculadas já ao abrir');
+});
+
+// A pixel of a finished file (fx, fy as fractions of its size), to see which part of the art it kept.
+async function centre(root, batch, item, fx = 0.5, fy = 0.5) {
+  const { data, info } = await sharp(path.join(root, 'batches', batch.id, 'out', item.outputs[0].name)).raw().toBuffer({ resolveWithObject: true });
+  const o = (Math.round(info.height * fy) * info.width + Math.round(info.width * fx)) * info.channels;
+  return { size: [info.width, info.height], rgb: [data[o], data[o + 1], data[o + 2]] };
+}
+const isRed = ([r, , b]) => r > 150 && b < 100, isBlue = ([r, , b]) => b > 150 && r < 100;
+
+test('formato do lote e da capa, enquadramento à mão por formato e desfazer', async () => {
+  const { root, batches } = await setup('batch-frame');
+  const file = path.join(root, 'larga.png'); await writeFile(file, await halves(3000, 1000));
+  const created = await batches.create({ files: [{ path: file, name: 'larga-ps4.png' }], title: 'x' });
+  let batch = await idle(batches, created.id);
+  const item = batch.items[0];
+  assert.deepEqual([item.width, item.height], [3000, 1000], 'padrão do kit: original');
+  assert.deepEqual(item.rendered, { format: 'original' });
+
+  await batches.updateBatch(batch.id, { format: '4x5' });
+  batch = await idle(batches, batch.id);
+  assert.deepEqual((await centre(root, batch, item)).size, [1200, 1500]);
+  assert.equal(item.formatSource, 'todas');
+
+  // Framed by hand: the left (red) side of the art.
+  await batches.updateItem(batch.id, item.id, { frame: { format: '4x5', x: 0, y: 0.5, zoom: 1 } });
+  batch = await idle(batches, batch.id);
+  assert.ok(isRed((await centre(root, batch, item)).rgb), 'enquadrada à esquerda');
+  assert.deepEqual(item.rendered, { format: '4x5', frame: { x: 0, y: 0.5, zoom: 1 } });
+
+  // Another format for this cover only; the 4:5 framing waits for it to come back.
+  await batches.updateItem(batch.id, item.id, { format: '1x1' });
+  batch = await idle(batches, batch.id);
+  assert.deepEqual((await centre(root, batch, item)).size, [1200, 1200]);
+  assert.equal(item.formatSource, 'manual');
+  await batches.updateItem(batch.id, item.id, { format: null });
+  batch = await idle(batches, batch.id);
+  assert.ok(isRed((await centre(root, batch, item)).rgb), 'o enquadramento de 4:5 voltou junto');
+
+  // "Desfazer escolhas" of the batch keeps the handwork; the cover's own reset clears it.
+  await batches.updateBatch(batch.id, { format: '4x5', reset: true });
+  batch = await idle(batches, batch.id);
+  assert.equal(batch.format, 'auto');
+  assert.deepEqual(item.frames, { '4x5': { x: 0, y: 0.5, zoom: 1 } });
+  await batches.updateBatch(batch.id, { format: '4x5' });
+  await batches.updateItem(batch.id, item.id, { reset: true });
+  batch = await idle(batches, batch.id);
+  assert.deepEqual(item.frames, {});
+  assert.ok(isRed((await centre(root, batch, item, 0.25)).rgb) && isBlue((await centre(root, batch, item, 0.75)).rgb), 'de volta ao centro da arte');
+
+  await assert.rejects(batches.updateItem(batch.id, item.id, { frame: { format: 'original', x: 0, y: 0, zoom: 1 } }), /formato com recorte/);
+  await assert.rejects(batches.updateItem(batch.id, item.id, { frame: { format: '4x5', x: 'esquerda', y: 0, zoom: 1 } }), /Enquadramento/);
+  await assert.rejects(batches.updateBatch(batch.id, { format: '8x10' }), /Formato/);
+  await assert.rejects(batches.updateBatch(batch.id, { fit: 'esticar' }), /Encaixe/);
+});
+
+test('encaixe "capa inteira" no lote: a arte toda aparece, com faixas desfocadas', async () => {
+  const { root, kit, batches } = await setup('batch-fit');
+  await kit.update({ output: { size: '4x5' } });
+  const file = path.join(root, 'larga.png'); await writeFile(file, await halves(3000, 1000));
+  const created = await batches.create({ files: [{ path: file, name: 'larga-ps4.png' }], title: 'x' });
+  let batch = await idle(batches, created.id);
+  const item = batch.items[0];
+  assert.ok(item.flags.some(f => f.code === 'cropped'), 'padrão: preenche e recorta');
+  await batches.updateBatch(batch.id, { fit: 'contain' });
+  batch = await idle(batches, batch.id);
+  assert.ok(!item.flags.some(f => f.code === 'cropped'), 'capa inteira: nada recortado');
+  assert.deepEqual(item.rendered, { format: '4x5', fit: 'contain' });
+  assert.equal(batches.summary(batch).modified, true);
+});
+
+test('capas feitas antes dos formatos não são refeitas ao reabrir', async () => {
+  const { root, kit, batches } = await setup('batch-legacy-frame');
+  const file = path.join(root, 'capa.jpg'); await writeFile(file, await cover(700, 875));
+  const created = await batches.create({ files: [{ path: file, name: 'capa-ps4.jpg' }], title: 'x' });
+  await idle(batches, created.id);
+  await batches.flush();
+  const json = path.join(root, 'batches', created.id, 'batch.json');
+  const saved = JSON.parse(await readFile(json, 'utf8'));
+  delete saved.format; delete saved.fit;
+  for (const item of saved.items) { delete item.rendered; delete item.frames; }
+  await writeFile(json, JSON.stringify(saved));
+  const reopened = await new Batches(root, kit).init();
+  const batch = reopened.get(created.id), item = batch.items[0];
+  assert.deepEqual([batch.format, batch.fit, item.frames], ['auto', 'auto', {}]);
+  assert.equal(reopened.needsRender(item), false);
+  reopened.refresh(batch);
+  assert.equal(item.status, 'done', 'nada voltou para a fila');
+  assert.deepEqual(item.rendered, { format: 'original' });
+  // The kit now says 4:5: the file is still in the art's own shape, so it is
+  // planned to be redone (with "Aplicar o kit atual") and not passed off as 4:5.
+  await kit.update({ output: { size: '4x5' } });
+  const later = await new Batches(root, kit).init();
+  const stale = later.get(created.id).items[0];
+  assert.deepEqual([stale.format, stale.rendered.format, later.needsRender(stale)], ['4x5', 'original', true]);
+});
+
+test('capa 1200 × 1500 da v1.1 (recorte automático): fica como está e o editor sempre a refaz', async () => {
+  const { root, kit, batches } = await setup('batch-legacy-store');
+  await kit.update({ output: { size: '4x5' } });
+  const file = path.join(root, 'larga.png'); await writeFile(file, await halves(3000, 1000));
+  const created = await batches.create({ files: [{ path: file, name: 'larga-ps4.png' }], title: 'x' });
+  await idle(batches, created.id);
+  await batches.flush();
+  const json = path.join(root, 'batches', created.id, 'batch.json');
+  const saved = JSON.parse(await readFile(json, 'utf8'));
+  delete saved.format; delete saved.fit;
+  for (const item of saved.items) { delete item.rendered; delete item.frames; }
+  await writeFile(json, JSON.stringify(saved));
+  const reopened = await new Batches(root, kit).init();
+  let batch = reopened.get(created.id);
+  const item = batch.items[0];
+  assert.deepEqual(item.rendered, { format: '4x5', fit: 'cover', legacy: true });
+  assert.equal(reopened.needsRender(item), false, 'aberta como está');
+  // The editor's "Aplicar" on the new default placement: the file must be redone.
+  await reopened.updateItem(batch.id, item.id, { frame: { format: '4x5', reset: true } });
+  batch = await idle(reopened, batch.id);
+  assert.deepEqual(item.rendered, { format: '4x5', fit: 'cover' }, 'refeita pelas regras novas');
 });
